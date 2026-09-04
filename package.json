@@ -1,0 +1,50 @@
+{
+  "name": "component-vault",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gestor local y offline de componentes UI de multiples fuentes (Uiverse, Magic UI, Aceternity...) con servidor MCP para IA.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "scan": "tsx scripts/scan-serve.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "drizzle-kit push",
+    "ingest": "tsx src/ingest/index.ts",
+    "ingest:uiverse": "tsx src/ingest/index.ts --source uiverse",
+    "ingest:magicui": "tsx src/ingest/index.ts --source magicui",
+    "ingest:aceternity": "tsx src/ingest/index.ts --source aceternity",
+    "ingest:threeui": "tsx src/ingest/index.ts --source threeui",
+    "ingest:hyperui": "tsx src/ingest/index.ts --source hyperui",
+    "ingest:local": "tsx src/ingest/index.ts --source uiverse,threeui,hyperui",
+    "ingest:remote": "tsx src/ingest/index.ts --source magicui,aceternity,shadcn,cult,kokonut",
+    "mcp": "tsx mcp/server.ts",
+    "stats": "tsx scripts/stats.ts",
+    "offline": "tsx scripts/offline.ts",
+    "copy:vendor": "node scripts/copy-vendor.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^11.0.0",
+    "drizzle-orm": "^0.36.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "drizzle-kit": "^0.28.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,267 @@
+@import "tailwindcss";
+
+/* Fuentes de marca autoalojadas (offline, sin llamadas a Google Fonts). */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+
+@theme {
+  /* Marca: mismo acento naranja que el portfolio */
+  --color-bg: #050505;
+  --color-panel: rgba(255, 255, 255, 0.03);
+  --color-panel-2: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-accent: #f0a470;
+  --color-accent-hover: #e08a50;
+  --color-accent-2: #f4ae7c;
+  --color-muted: #a0a0a0;
+  --color-text: #f2f2f5;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+}
+
+:root {
+  --font-inter: "Inter", sans-serif;
+  --font-space: "Space Grotesk", sans-serif;
+  /* Superficie OPACA para menús flotantes (selects, popovers) — nunca translúcida. */
+  --color-popover: #161619;
+  --color-popover-hover: rgba(255, 255, 255, 0.08);
+}
+
+html {
+  font-size: 13.5px; /* 1rem = 13.5px. Reduce todo el UI ~15.5% */
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 14.5px; /* En monitores muy grandes recupera escala */
+  }
+}
+
+body {
+  background: var(--color-bg);
+  color: #f2f2f5;
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  /* Glow naranja + rejilla sutil — idéntico al portfolio */
+  background-image:
+    radial-gradient(circle at 50% -8%, rgba(240, 164, 112, 0.12), transparent 46%),
+    radial-gradient(circle at 88% 12%, rgba(240, 164, 112, 0.07), transparent 42%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 34px 34px, 34px 34px;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-space);
+}
+
+/* Degradado de texto (marca naranja). */
+.text-gradient {
+  background: linear-gradient(135deg, #f4ae7c 0%, #e89055 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Cristal (barra de filtros / nav). */
+.glass {
+  background: rgba(5, 5, 5, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card-surface {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+}
+
+/* Granulado (film grain) estático, coste ~0. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(240, 164, 112, 0.4) transparent;
+}
+
+/* ============================================================
+   SELECTS nativos — estilo premium coherente con el tema.
+   Los desplegables principales usan <CustomSelect/>; esto cubre
+   los <select> nativos que queden (dark por defecto; light abajo)
+   para que ninguno rompa la estética general.
+   ============================================================ */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: var(--color-panel-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+select:hover {
+  border-color: rgba(240, 164, 112, 0.55);
+}
+select:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(240, 164, 112, 0.3);
+}
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* El menú desplegado del select nativo (limitado por navegador, pero mejora contraste). */
+select option {
+  background-color: #141418;
+  color: #f2f2f5;
+}
+
+/* ============================================================
+   TEMA CLARO — idéntico a OrquestaGit (html.light en <html>)
+   Fondo: #F4EEE4 · Texto: #2B2620 · Glow cálido pastel
+   ============================================================ */
+html.light {
+  --color-bg: #F4EEE4;
+  --color-panel: rgba(252, 248, 241, 0.70);
+  --color-panel-2: rgba(255, 255, 255, 0.88);
+  --color-border: #EAE2D6;
+  --color-muted: #8B806F;
+  --color-text: #2B2620;
+  --color-popover: #FCF8F1;
+  --color-popover-hover: rgba(43, 38, 32, 0.06);
+  color-scheme: light;
+}
+
+html.light body {
+  color: #2B2620;
+  background-color: #F4EEE4;
+  background-image:
+    radial-gradient(circle at 50% -8%,  rgba(224, 130, 79, 0.08), transparent 46%),
+    radial-gradient(circle at 85% 18%,  rgba(224, 130, 79, 0.05), transparent 42%),
+    radial-gradient(circle at 8%  72%,  rgba(224, 130, 79, 0.04), transparent 45%),
+    linear-gradient(to right, rgba(120, 80, 40, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 80, 40, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+  background-attachment: fixed;
+}
+
+/* Títulos siempre oscuros en claro */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4 { color: #2B2620; }
+
+/* Glass / Nav */
+html.light .glass {
+  background: linear-gradient(180deg, rgba(249, 244, 236, 0.82) 0%, rgba(244, 238, 228, 0.66) 100%);
+  backdrop-filter: blur(14px);
+  border-color: #D7CBB9;
+}
+
+/* Tarjetas y superficies */
+html.light .card-surface {
+  background: rgba(252, 248, 241, 0.70);
+  border-color: #EAE2D6;
+}
+
+/* -------------------------------------------------------
+   Overrides para clases Tailwind hardcodeadas en blanco
+   (textos, fondos, bordes)
+   ------------------------------------------------------- */
+
+/* Textos (incluye la corrección del contraste del toggle EN/ES text-white/60) */
+html.light .text-white            { color: #2B2620 !important; }
+html.light .hover\:text-white:hover { color: #2B2620 !important; }
+html.light .text-white\/70        { color: rgba(43, 38, 32, 0.80) !important; }
+html.light .text-white\/60        { color: rgba(43, 38, 32, 0.80) !important; border-color: rgba(43, 38, 32, 0.3) !important; }
+html.light .text-white\/50        { color: rgba(43, 38, 32, 0.65) !important; }
+
+/* Fondos negros → blancos/superficies claras */
+html.light .bg-black\/10  { background: rgba(0,0,0,0.04) !important; }
+html.light .bg-black\/20  { background: rgba(0,0,0,0.05) !important; }
+html.light .bg-black\/30  { background: rgba(0,0,0,0.055) !important; }
+html.light .bg-black\/40  { background: rgba(255,255,255,0.60) !important; }
+html.light .bg-black\/60  { background: rgba(255,255,255,0.75) !important; }
+html.light .bg-black\/80  { background: rgba(255,255,255,0.88) !important; }
+html.light .bg-black\/95  { background: rgba(255,255,255,0.94) !important; }
+
+/* Fondos blancos con opacidad */
+html.light .bg-white\/5   { background: rgba(0,0,0,0.04) !important; }
+html.light .bg-white\/10  { background: rgba(0,0,0,0.07) !important; }
+
+/* Bordes blancos → negros */
+html.light .border-white\/5  { border-color: rgba(0,0,0,0.07) !important; }
+html.light .border-white\/10 { border-color: rgba(0,0,0,0.10) !important; }
+html.light .border-white\/20 { border-color: rgba(0,0,0,0.15) !important; }
+
+/* Nav scrolled en tema claro */
+html.light [data-scrolled="true"]#nav-inner {
+  background: rgba(237, 240, 244, 0.92) !important;
+  border-color: rgba(0,0,0,0.10) !important;
+}
+
+/* Inputs y selects */
+html.light input,
+html.light select,
+html.light textarea {
+  background: rgba(0,0,0,0.04) !important;
+  color: #101014 !important;
+  border-color: rgba(0,0,0,0.12) !important;
+}
+html.light input::placeholder,
+html.light textarea::placeholder { color: rgba(16,16,20,0.40) !important; }
+
+/* Select en tema claro: chevron oscuro + opciones legibles */
+html.light select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238B806F' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  border-radius: 8px !important;
+}
+html.light select:hover { border-color: rgba(224,130,79,0.55) !important; }
+html.light select:focus-visible { border-color: var(--color-accent) !important; box-shadow: 0 0 0 2px rgba(224,130,79,0.28) !important; }
+html.light select option { background-color: #ffffff; color: #2B2620; }
+
+/* Scrollbar en claro */
+html.light * {
+  scrollbar-color: rgba(240, 164, 112, 0.5) rgba(0,0,0,0.05);
+}
+
+/* Grain más sutil en claro */
+html.light .grain { opacity: 0.03; }
+
+/* ============================================================
+   Transición suave de tema (mismas sensaciones que el portfolio)
+   ============================================================ */
+body,
+.glass,
+.card-surface {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Iconos del toggle de tema: fallback pre-hidratación de React.
+   Una vez React hidrata, el estado isLight controla qué SVG se muestra.
+   Los IDs icon-moon / icon-sun quedan como hook de accesibilidad. */
+#theme-toggle #icon-sun  { display: none; }
+html.light #theme-toggle #icon-moon { display: none; }
+html.light #theme-toggle #icon-sun  { display: inline; }

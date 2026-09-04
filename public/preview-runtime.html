@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Vault · preview runtime</title>
+<!--
+  Runtime de vista previa para componentes React / Motion / Three.
+  ADITIVO: es un fichero estatico independiente. La pagina de detalle lo carga
+  en un <iframe> y le envia el codigo del componente por postMessage; aqui se
+  transpila (Babel) y se monta en vivo. Si algo falla, se muestra el error y la
+  pagina de detalle sigue enseniando el codigo.
+
+  OFFLINE: intenta cargar las librerias desde /vendor (ver scripts/copy-vendor.mjs)
+  y, si no estan, cae a cdnjs. Para 100% offline, corre `npm run copy:vendor` una vez.
+-->
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{display:grid;place-items:center;min-height:100vh;background:transparent;color:#eee;
+    font-family:system-ui,sans-serif;padding:16px;overflow:auto}
+  #root{max-width:100%}
+  #err{white-space:pre-wrap;max-width:680px;font:12px/1.5 ui-monospace,monospace;
+    color:#fca5a5;background:#1a0d0d;border:1px solid #7f1d1d;border-radius:10px;padding:14px;display:none}
+  #loading{color:#9aa0ac;font-size:13px}
+</style>
+</head>
+<body>
+<div id="loading">Cargando runtime…</div>
+<div id="root"></div>
+<pre id="err"></pre>
+
+<script>
+// --- Carga de una libreria con fallback vendor -> cdnjs ---
+function loadScript(srcs) {
+  return new Promise((resolve, reject) => {
+    let i = 0;
+    const tryNext = () => {
+      if (i >= srcs.length) return reject(new Error("no se pudo cargar: " + srcs.join(", ")));
+      const s = document.createElement("script");
+      s.src = srcs[i++];
+      s.onload = () => resolve();
+      s.onerror = tryNext;
+      document.head.appendChild(s);
+    };
+    tryNext();
+  });
+}
+
+const CDN = "https://cdnjs.cloudflare.com/ajax/libs";
+const LIBS = [
+  ["/vendor/react.production.min.js",        CDN + "/react/18.3.1/umd/react.production.min.js"],
+  ["/vendor/react-dom.production.min.js",     CDN + "/react-dom/18.3.1/umd/react-dom.production.min.js"],
+  ["/vendor/babel.min.js",                    CDN + "/babel-standalone/7.26.4/babel.min.js"],
+  ["/vendor/framer-motion.js",                CDN + "/framer-motion/11.11.17/framer-motion.js"],
+  ["/vendor/three.min.js",                    CDN + "/three.js/0.160.0/three.min.js"],
+];
+
+async function boot() {
+  for (const srcs of LIBS) {
+    try { await loadScript(srcs); }
+    catch (e) { /* three/motion son opcionales: seguimos */ console.warn(e.message); }
+  }
+  document.getElementById("loading").style.display = "none";
+  setup();
+}
+
+let renderPreview; // se define en setup()
+
+function setup() {
+  const React = window.React;
+  const ReactDOM = window.ReactDOM;
+  const Motion = window.Motion || window.framerMotion || {};
+  const THREE = window.THREE || {};
+
+  // cn / clsx / tailwind-merge minimalistas
+  function clsx(...args) {
+    const out = [];
+    const add = (a) => {
+      if (!a) return;
+      if (typeof a === "string" || typeof a === "number") out.push(String(a));
+      else if (Array.isArray(a)) a.forEach(add);
+      else if (typeof a === "object") for (const k in a) if (a[k]) out.push(k);
+    };
+    args.forEach(add);
+    return out.join(" ");
+  }
+  const twMerge = (...a) => clsx(...a);
+  const cn = (...a) => clsx(...a);
+
+  // Componente "comodin" para imports desconocidos: renderiza su etiqueta/hijos.
+  const Passthrough = React.forwardRef(function P(props, ref) {
+    const { as, children, ...rest } = props || {};
+    return React.createElement(as || "div", { ref, ...rest }, children);
+  });
+  function passthroughModule() {
+    return new Proxy(
+      { __esModule: true, default: Passthrough },
+      { get: (t, p) => (p in t ? t[p] : Passthrough) }
+    );
+  }
+
+  // Resolucion de imports -> globales
+  function requireShim(name) {
+    switch (name) {
+      case "react": return React;
+      case "react-dom": return ReactDOM;
+      case "react-dom/client": return ReactDOM;
+      case "react/jsx-runtime":
+      case "react/jsx-dev-runtime":
+        return { jsx: React.createElement, jsxs: React.createElement, Fragment: React.Fragment };
+      case "framer-motion":
+      case "motion":
+      case "motion/react": return Motion;
+      case "three": return THREE;
+      case "clsx": return Object.assign(function () { return clsx.apply(null, arguments); }, { clsx, default: clsx });
+      case "tailwind-merge": return { twMerge, twJoin: twMerge, default: twMerge };
+    }
+    if (/(^|\/)(utils|cn)$/.test(name) || /lib\/utils$/.test(name)) {
+      return { cn, default: cn, clsx, twMerge };
+    }
+    // desconocido -> comodin (evita que un import roto tumbe todo)
+    return passthroughModule();
+  }
+
+  function pickComponent(mod) {
+    if (!mod) return null;
+    if (mod.default && (typeof mod.default === "function" || typeof mod.default === "object")) return mod.default;
+    for (const k of Object.keys(mod)) {
+      if (typeof mod[k] === "function" && /^[A-Z]/.test(k)) return mod[k];
+    }
+    return null;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("err");
+    el.textContent = String(msg);
+    el.style.display = "block";
+  }
+
+  renderPreview = function (files, entryHint) {
+    const errEl = document.getElementById("err");
+    errEl.style.display = "none";
+    const rootEl = document.getElementById("root");
+    rootEl.innerHTML = "";
+
+    try {
+      if (!files || !files.length) throw new Error("Sin ficheros.");
+
+      // Elegir el fichero de entrada: el hint, o el primer .tsx/.jsx con export.
+      const codeFiles = files.filter((f) => /\.(t|j)sx?$/.test(f.path));
+      let entry =
+        (entryHint && files.find((f) => f.path === entryHint)) ||
+        codeFiles.find((f) => /export\s+(default|const|function|class)/.test(f.content)) ||
+        codeFiles[0] ||
+        files[0];
+      if (!entry) throw new Error("No hay fichero de codigo React.");
+
+      const out = Babel.transform(entry.content, {
+        filename: entry.path,
+        presets: [
+          ["env", { modules: "commonjs", targets: { esmodules: true } }],
+          ["react", { runtime: "automatic" }],
+          ["typescript", { allExtensions: true, isTSX: true, onlyRemoveTypeImports: true }],
+        ],
+      }).code;
+
+      const module = { exports: {} };
+      const fn = new Function("require", "module", "exports", "React", out);
+      fn(requireShim, module, module.exports, React);
+
+      const Comp = pickComponent(module.exports);
+      if (!Comp) throw new Error("No se encontro un componente exportado (export default).");
+
+      const root = ReactDOM.createRoot(rootEl);
+      root.render(React.createElement(React.StrictMode, null, React.createElement(Comp)));
+    } catch (e) {
+      showError((e && e.stack) || e);
+      // Avisar al padre para que muestre el fallback (codigo).
+      try { parent.postMessage({ type: "preview-error", message: String(e && e.message || e) }, "*"); } catch (_) {}
+    }
+  };
+
+  // Recibir codigo del padre.
+  window.addEventListener("message", (ev) => {
+    const d = ev.data;
+    if (d && d.type === "preview" && Array.isArray(d.files)) renderPreview(d.files, d.entry);
+  });
+  // Exponer para pruebas directas.
+  window.renderPreview = renderPreview;
+  // Anunciar que el runtime esta listo.
+  try { parent.postMessage({ type: "preview-ready" }, "*"); } catch (_) {}
+}
+
+boot();
+</script>
+</body>
+</html>

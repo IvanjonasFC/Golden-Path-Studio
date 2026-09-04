@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "component-vault": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "C:\\Users\\IvN\\Desktop\\Componentes\\component-vault\\mcp\\server.ts"
+      ],
+      "env": {
+        "DB_PATH": "C:\\Users\\IvN\\Desktop\\Componentes\\component-vault\\data\\catalog.db"
+      },
+      "cwd": "C:\\Users\\IvN\\Desktop\\Componentes\\component-vault"
+    }
+  }
+}

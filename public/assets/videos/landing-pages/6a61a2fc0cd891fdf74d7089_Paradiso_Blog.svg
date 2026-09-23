@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#0a0c14"/>
+        <text x="40" y="50" fill="#a855f7" font-size="11" font-weight="800" letter-spacing="2">EDITORIAL &amp; INSIGHTS</text>
+        <text x="40" y="80" fill="#ffffff" font-size="22" font-weight="900">Paradiso Blog</text>
+
+        <!-- Article 1 -->
+        <rect x="40" y="110" width="220" height="320" rx="10" fill="#111625" stroke="rgba(255,255,255,0.08)"/>
+        <rect x="40" y="110" width="220" height="110" rx="10" fill="#1e1b4b"/>
+        <text x="60" y="245" fill="#a855f7" font-size="10" font-weight="800">ARCHITECTURE</text>
+        <text x="60" y="270" fill="#ffffff" font-size="13" font-weight="700">Scaling Next.js 15 Apps with Tailwind Tokens</text>
+        <text x="60" y="390" fill="#64748b" font-size="10">Sep 18, 2026 · 6 min read</text>
+
+        <!-- Article 2 -->
+        <rect x="290" y="110" width="220" height="320" rx="10" fill="#111625" stroke="rgba(255,255,255,0.08)"/>
+        <rect x="290" y="110" width="220" height="110" rx="10" fill="#064e3b"/>
+        <text x="310" y="245" fill="#10b981" font-size="10" font-weight="800">AI ENGINEERING</text>
+        <text x="310" y="270" fill="#ffffff" font-size="13" font-weight="700">Master Prompting: From Wireframe to Production</text>
+        <text x="310" y="390" fill="#64748b" font-size="10">Sep 15, 2026 · 8 min read</text>
+
+        <!-- Article 3 -->
+        <rect x="540" y="110" width="220" height="320" rx="10" fill="#111625" stroke="rgba(255,255,255,0.08)"/>
+        <rect x="540" y="110" width="220" height="110" rx="10" fill="#1e293b"/>
+        <text x="560" y="245" fill="#38bdf8" font-size="10" font-weight="800">DESIGN SYSTEMS</text>
+        <text x="560" y="270" fill="#ffffff" font-size="13" font-weight="700">Dynamic Theming with CSS Custom Properties</text>
+        <text x="560" y="390" fill="#64748b" font-size="10">Sep 12, 2026 · 4 min read</text>
+      </svg>

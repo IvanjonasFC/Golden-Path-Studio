@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#050a14"/>
+        
+        <text x="60" y="130" fill="#38bdf8" font-size="11" font-weight="800" letter-spacing="2">GLOBAL SETTLEMENT PROTOCOL</text>
+        <text x="60" y="175" fill="#ffffff" font-size="38" font-weight="900">Gulfselite</text>
+        <text x="60" y="210" fill="rgba(255,255,255,0.65)" font-size="13">Production grade interface specification...</text>
+
+        <rect x="60" y="250" width="150" height="44" rx="8" fill="#38bdf8"/>
+        <text x="135" y="277" text-anchor="middle" fill="#000000" font-size="12" font-weight="800">OPEN ACCOUNT</text>
+
+        <!-- Financial Widget Right Card -->
+        <rect x="470" y="80" width="270" height="340" rx="14" fill="#0c1424" stroke="rgba(56,189,248,0.25)"/>
+        <text x="495" y="115" fill="#ffffff" font-size="14" font-weight="800">Instant Currency Swap</text>
+        <rect x="495" y="135" width="220" height="54" rx="8" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.08)"/>
+        <text x="510" y="156" fill="rgba(255,255,255,0.5)" font-size="9">YOU PAY</text>
+        <text x="510" y="176" fill="#ffffff" font-size="15" font-weight="800">10,000 USD</text>
+
+        <circle cx="605" cy="205" r="14" fill="#1e293b" stroke="rgba(255,255,255,0.15)"/>
+        <text x="605" y="209" text-anchor="middle" fill="#38bdf8" font-size="12">&darr;</text>
+
+        <rect x="495" y="225" width="220" height="54" rx="8" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.08)"/>
+        <text x="510" y="246" fill="rgba(255,255,255,0.5)" font-size="9">YOU RECEIVE</text>
+        <text x="510" y="266" fill="#10b981" font-size="15" font-weight="800">9,240.50 EUR</text>
+
+        <rect x="495" y="305" width="220" height="42" rx="8" fill="#38bdf8"/>
+        <text x="605" y="331" text-anchor="middle" fill="#000000" font-size="12" font-weight="800">CONFIRM TRANSFER</text>
+      </svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#faf8f5"/>
+        <!-- Top Toolbar -->
+        <rect x="0" y="0" width="800" height="52" fill="#ffffff"/>
+        <line x1="0" y1="52" x2="800" y2="52" stroke="#e8e5e0"/>
+        <circle cx="36" cy="26" r="10" fill="#d97706"/>
+        <text x="56" y="31" fill="#1c1917" font-size="14" font-weight="800" letter-spacing="-0.2">WORKSPACE KANBAN</text>
+        
+        <rect x="520" y="14" width="140" height="26" rx="6" fill="#f4f1ec" stroke="#e5e0d8"/>
+        <text x="536" y="31" fill="#78716c" font-size="11">Search tasks...</text>
+        <rect x="672" y="14" width="94" height="26" rx="6" fill="#d97706"/>
+        <text x="719" y="31" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">+ New Task</text>
+
+        <!-- Column 1: Backlog -->
+        <rect x="24" y="68" width="176" height="390" rx="8" fill="#f4f1eb"/>
+        <text x="38" y="94" fill="#57534e" font-size="11" font-weight="800" letter-spacing="1">BACKLOG</text>
+        <rect x="162" y="82" width="24" height="16" rx="8" fill="#e7e2d9"/>
+        <text x="174" y="94" text-anchor="middle" fill="#57534e" font-size="10" font-weight="700">3</text>
+
+        <rect x="34" y="112" width="156" height="84" rx="6" fill="#ffffff" stroke="#e7e2d9"/>
+        <rect x="44" y="122" width="46" height="16" rx="4" fill="#fef3c7"/>
+        <text x="67" y="134" text-anchor="middle" fill="#92400e" font-size="9" font-weight="700">RESEARCH</text>
+        <text x="44" y="154" fill="#1c1917" font-size="11" font-weight="700">Audit token palette</text>
+        <circle cx="50" cy="178" r="7" fill="#cbd5e1"/>
+        <rect x="142" y="172" width="38" height="12" rx="3" fill="#f1f5f9"/>
+        <text x="161" y="181" text-anchor="middle" fill="#64748b" font-size="8">P2</text>
+
+        <rect x="34" y="206" width="156" height="74" rx="6" fill="#ffffff" stroke="#e7e2d9"/>
+        <rect x="44" y="216" width="40" height="16" rx="4" fill="#e0f2fe"/>
+        <text x="64" y="228" text-anchor="middle" fill="#0369a1" font-size="9" font-weight="700">SPEC</text>
+        <text x="44" y="248" fill="#1c1917" font-size="11" font-weight="700">Theme guidelines</text>
+
+        <!-- Column 2: In Progress -->
+        <rect x="216" y="68" width="176" height="390" rx="8" fill="#f4f1eb"/>
+        <text x="230" y="94" fill="#0284c7" font-size="11" font-weight="800" letter-spacing="1">IN PROGRESS</text>
+        <rect x="354" y="82" width="24" height="16" rx="8" fill="#e0f2fe"/>
+        <text x="366" y="94" text-anchor="middle" fill="#0284c7" font-size="10" font-weight="700">2</text>
+
+        <rect x="226" y="112" width="156" height="96" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+        <rect x="236" y="122" width="54" height="16" rx="4" fill="#fee2e2"/>
+        <text x="263" y="134" text-anchor="middle" fill="#b91c1c" font-size="9" font-weight="700">URGENT</text>
+        <text x="236" y="154" fill="#1c1917" font-size="11" font-weight="700">Bento card animation</text>
+        <rect x="236" y="174" width="136" height="4" rx="2" fill="#e2e8f0"/>
+        <rect x="236" y="174" width="90" height="4" rx="2" fill="#0284c7"/>
+        <circle cx="242" cy="194" r="7" fill="#0284c7"/>
+
+        <!-- Column 3: Review -->
+        <rect x="408" y="68" width="176" height="390" rx="8" fill="#f4f1eb"/>
+        <text x="422" y="94" fill="#7c3aed" font-size="11" font-weight="800" letter-spacing="1">REVIEW</text>
+        <rect x="546" y="82" width="24" height="16" rx="8" fill="#ede9fe"/>
+        <text x="558" y="94" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="700">4</text>
+
+        <rect x="418" y="112" width="156" height="74" rx="6" fill="#ffffff" stroke="#e7e2d9"/>
+        <text x="428" y="138" fill="#1c1917" font-size="11" font-weight="700">Fuzzy search palette</text>
+        <text x="428" y="156" fill="#78716c" font-size="9">PR #142 · 3 reviewers</text>
+
+        <!-- Column 4: Done -->
+        <rect x="600" y="68" width="176" height="390" rx="8" fill="#f4f1eb"/>
+        <text x="614" y="94" fill="#15803d" font-size="11" font-weight="800" letter-spacing="1">DONE</text>
+        <rect x="738" y="82" width="24" height="16" rx="8" fill="#dcfce7"/>
+        <text x="750" y="94" text-anchor="middle" fill="#15803d" font-size="10" font-weight="700">8</text>
+
+        <rect x="610" y="112" width="156" height="68" rx="6" fill="#ffffff" stroke="#e7e2d9" opacity="0.85"/>
+        <text x="620" y="136" fill="#57534e" font-size="11" font-weight="600">Export smoke tests</text>
+        <rect x="620" y="148" width="60" height="14" rx="3" fill="#dcfce7"/>
+        <text x="650" y="158" text-anchor="middle" fill="#15803d" font-size="8" font-weight="700">DEPLOYED</text>
+      </svg>

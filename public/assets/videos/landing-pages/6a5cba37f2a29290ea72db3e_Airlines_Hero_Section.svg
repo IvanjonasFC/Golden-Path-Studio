@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <defs>
+          <linearGradient id="travelGlow_6a5cba37f2a29290ea72db3e" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#022c22"/>
+            <stop offset="100%" stop-color="#040b10"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#travelGlow_6a5cba37f2a29290ea72db3e)"/>
+        
+        <text x="60" y="130" fill="#2dd4bf" font-size="11" font-weight="800" letter-spacing="2">PRIVATE AVIATION &amp; EXPEDITIONS</text>
+        <text x="60" y="175" fill="#ffffff" font-size="38" font-weight="900">Airlines Hero Section</text>
+        <text x="60" y="210" fill="rgba(255,255,255,0.65)" font-size="13">Modern hero section for travel agencies, airlines, tourism busine...</text>
+
+        <!-- Booking Bar Card -->
+        <rect x="60" y="255" width="680" height="85" rx="12" fill="#0d1f23" stroke="#2dd4bf" stroke-width="1.5"/>
+        
+        <text x="85" y="285" fill="rgba(255,255,255,0.5)" font-size="9" font-weight="700">DEPARTURE</text>
+        <text x="85" y="312" fill="#ffffff" font-size="14" font-weight="800">London (LHR)</text>
+
+        <line x1="230" y1="275" x2="230" y2="320" stroke="rgba(255,255,255,0.15)"/>
+
+        <text x="255" y="285" fill="rgba(255,255,255,0.5)" font-size="9" font-weight="700">DESTINATION</text>
+        <text x="255" y="312" fill="#ffffff" font-size="14" font-weight="800">New York (JFK)</text>
+
+        <line x1="400" y1="275" x2="400" y2="320" stroke="rgba(255,255,255,0.15)"/>
+
+        <text x="425" y="285" fill="rgba(255,255,255,0.5)" font-size="9" font-weight="700">SUITE CLASS</text>
+        <text x="425" y="312" fill="#2dd4bf" font-size="14" font-weight="800">Ultra First Suite</text>
+
+        <rect x="585" y="275" width="130" height="46" rx="8" fill="#2dd4bf"/>
+        <text x="650" y="303" text-anchor="middle" fill="#042f2e" font-size="11" font-weight="800">FIND CHARTER</text>
+
+        <!-- Telemetry Stats -->
+        <text x="60" y="395" fill="rgba(255,255,255,0.4)" font-size="10">FLEET AVAILABILITY</text>
+        <text x="60" y="420" fill="#ffffff" font-size="16" font-weight="800">14 Aircraft Ready · Global Escort</text>
+      </svg>

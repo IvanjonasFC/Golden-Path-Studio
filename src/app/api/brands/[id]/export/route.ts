@@ -4,7 +4,7 @@ import { join, resolve, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { getBrand, getBrandVersion, resolveTokens, recordBrandExport } from "@/lib/brands";
 import { compileBrand } from "@/lib/tokens";
-import { buildBrandExportFiles, type ExportMode, type ExportSource } from "@/lib/brandExport";
+import { buildBrandExport, type ExportMode, type ExportSource } from "@/lib/brandExport";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,9 +53,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const base = resolve(body?.dir || process.env.EXPORT_DIR || "./exports", "brands", brand.slug,
     versionSel ? `v-${versionLabel}` : "draft");
 
+  const sourceLabel = versionSel ? `version:${versionLabel}` : "draft";
   try {
     const compile = compileBrand(tokens);
-    const files = buildBrandExportFiles({
+    const { files, audit } = buildBrandExport({
       brand: {
         id: brand.id, name: brand.name, slug: brand.slug, description: brand.description,
         tokens, previewIds, parts: brand.parts,
@@ -72,17 +73,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const exportId = recordBrandExport({
       brandId: brand.id, brandVersionId, mode, target,
       outDir: base, resolvedHash, status: "ok",
+      sourceLabel, files: audit.filesGenerated, omitted: audit.filesOmitted,
+      warnings: audit.warnings, partial: audit.partial,
     });
 
     return NextResponse.json({
       exportId, dir: base, mode,
-      source: versionSel ? `version:${versionLabel}` : "draft",
+      source: sourceLabel,
       brandVersionId, resolvedHash, files: Object.keys(files).length,
+      audit,
     });
   } catch (error: any) {
     recordBrandExport({
       brandId: brand.id, brandVersionId, mode, target,
       outDir: base, resolvedHash, status: "failed", errorMsg: error?.message ?? "error",
+      sourceLabel, partial: true,
     });
     return NextResponse.json({ error: error?.message ?? "export failed" }, { status: 500 });
   }

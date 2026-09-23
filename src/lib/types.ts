@@ -4,6 +4,16 @@ export interface ComponentFile {
   target?: string;
 }
 
+export interface Sample {
+  id: string;
+  name: string;
+  html: string;
+  css: string;
+  category?: string;
+  source?: string;
+  framework?: string;
+}
+
 /** Forma normalizada que devuelve la API y el MCP (JSON ya parseado). */
 export interface ComponentDTO {
   id: string;

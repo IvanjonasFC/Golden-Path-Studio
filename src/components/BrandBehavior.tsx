@@ -8,7 +8,7 @@ import {
   FORM_PRESETS, FORM_VALIDATION, FORM_CONFIRM, TABLE_LAYOUTS, FILTER_STYLES,
   PAGINATION, SEARCH_STYLES, SEARCH_TRIGGER, ERROR_PATTERNS, SUCCESS_PATTERNS,
   MOBILE_DATA, CONFIRMATIONS, DATA_PRESETS, blueprintToMarkdown,
-  type Blueprint, type Opt, type Badge, type TreeNode, type LibItem,
+  type Blueprint, type Opt, type Badge, type TreeNode, type LibItem, type OriginInfo,
 } from "@/lib/blueprint";
 import { resolveBlueprint, resolvedToBlueprint } from "@/lib/resolve";
 import { CoverageMini, ResolvedPreview } from "./BrandSynthesis";
@@ -31,6 +31,25 @@ interface Props {
   addIdea: (idea: { title: string; source?: string; url?: string }) => void;
   removeIdea: (index: number) => void;
   applyToRules: (line: string) => void;
+  originOf?: (domain: "interaction" | "structure" | "data", key: string) => OriginInfo;
+}
+
+/* Trazabilidad VISIBLE por campo/grupo: de dónde viene el valor actual.
+   detectado (análisis) · auto (sembrado) · default · heredado · manual. */
+const ORIGIN_TAG: Record<OriginInfo["state"], { label: string; cls: string } | null> = {
+  detected: { label: "detectado", cls: "text-sky-300 border-sky-400/40 bg-sky-400/10" },
+  seeded: { label: "auto", cls: "text-emerald-300 border-emerald-400/40 bg-emerald-400/10" },
+  manual: { label: "manual", cls: "text-white/70 border-white/25 bg-white/10" },
+  default: { label: "default", cls: "text-amber-300 border-amber-400/40 bg-amber-400/10" },
+  inherited: { label: "heredado", cls: "text-violet-300 border-violet-400/40 bg-violet-400/10" },
+  missing: null,
+};
+function OriginTag({ info }: { info?: OriginInfo }) {
+  if (!info) return null;
+  const meta = ORIGIN_TAG[info.state];
+  if (!meta) return null;
+  const tip = [info.state === "detected" ? "Detectado del análisis" : info.state === "seeded" ? "Autoaplicado desde el análisis" : info.state === "default" ? "Valor por defecto (no detectado)" : info.state === "inherited" ? "Heredado de preset/plantilla" : "Editado manualmente", info.source, info.confidence && `confianza: ${info.confidence}`].filter(Boolean).join(" · ");
+  return <span title={tip} className={"rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide " + meta.cls}>{meta.label}</span>;
 }
 
 /* ------------------------------- Primitivos -------------------------------- */
@@ -45,11 +64,11 @@ const LEVEL_BORDER: Record<Level, string> = {
   recomendado: "border-l-2 border-l-sky-400/40",
   avanzado: "border-l-2 border-l-white/15",
 };
-function Section({ title, hint, level, children }: { title: string; hint?: string; level?: Level; children: React.ReactNode }) {
+function Section({ title, hint, level, origin, children }: { title: string; hint?: string; level?: Level; origin?: OriginInfo; children: React.ReactNode }) {
   return (
     <div className={"card-surface rounded-xl p-4 " + (level ? LEVEL_BORDER[level] : "")}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-[13px] font-semibold tracking-tight text-[var(--color-text)]">{title}</h3>
+        <h3 className="flex items-center gap-1.5 text-[13px] font-semibold tracking-tight text-[var(--color-text)]">{title}<OriginTag info={origin} /></h3>
         {level && <span className={"rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide " + LEVEL_STYLE[level]}>{level}</span>}
       </div>
       {hint && <p className="mt-0.5 text-xs text-[var(--color-muted)]">{hint}</p>}
@@ -935,7 +954,15 @@ function DepAlert({ tone, children, target, actionLabel, onAction }: {
   const cls = tone === "warn" ? "border-amber-400/40 bg-amber-400/10 text-amber-200" : "border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 text-[var(--color-accent)]";
   return (
     <div className={"mt-2 flex flex-wrap items-center gap-2 rounded-lg border px-2.5 py-2 text-xs " + cls}>
-      <span className="text-sm leading-none">{tone === "warn" ? "⚠" : "↳"}</span>
+      {tone === "warn" ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-amber-400">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      ) : (
+        <span className="text-sm leading-none">↳</span>
+      )}
       <span className="min-w-0 flex-1">{children}</span>
       {target && <span className="rounded-full border border-current/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide opacity-90">afecta: {target}</span>}
       {actionLabel && onAction && (
@@ -980,7 +1007,8 @@ function StateStrip({ empty, loading, error, success }: { empty: boolean; loadin
 }
 
 /* --------------------------------- Panel ----------------------------------- */
-export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea, removeIdea, applyToRules }: Props) {
+export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea, removeIdea, applyToRules, originOf }: Props) {
+  const oo = (domain: "interaction" | "structure" | "data", key: string): OriginInfo | undefined => originOf?.(domain, key);
   const i = bp.interaction ?? {};
   const a = bp.architecture ?? {};
   const s = bp.security ?? {};
@@ -996,7 +1024,7 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
         : "";
     return (
       <TabShell bp={bp} groups={interactionImpact(bp)} left={<>
-        <Section title="Navegación" hint="El esqueleto por el que se mueve la app.">
+        <Section title="Navegación" hint="El esqueleto por el que se mueve la app." origin={oo("interaction","navigationPattern")}>
           <CardChoice options={NAV_PATTERNS} value={i.navigationPattern} onPick={(v) => setField("interaction.navigationPattern", v)} />
           {navHint && (
             <DepAlert tone="info" target={i.navigationPattern === "app-shell" || i.navigationPattern === "dashboard" ? "Datos" : undefined}>{navHint}</DepAlert>
@@ -1011,7 +1039,7 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
             </label>
           </div>
         </Section>
-        <Section title="Motion" hint="Una decisión, no un ensayo. Elige el carácter de las animaciones.">
+        <Section title="Motion" hint="Una decisión, no un ensayo. Elige el carácter de las animaciones." origin={oo("interaction","motionPreset")}>
           <CardChoice options={MOTION_PRESETS} value={i.motionPreset} onPick={(v) => { setField("interaction.motionPreset", v); if (v === "none") setField("interaction.routeTransitions", false); }} />
           <div className="mt-2">
             <Toggle
@@ -1022,7 +1050,7 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
             />
           </div>
         </Section>
-        <Section title="Carga">
+        <Section title="Carga" origin={oo("interaction","loadingPattern")}>
           <CardChoice options={LOADING_PATTERNS} value={i.loadingPattern} onPick={(v) => setField("interaction.loadingPattern", v)} cols={4} />
         </Section>
         <Section title="Feedback">
@@ -1039,7 +1067,7 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
   if (tab === "estructura") {
     return (
       <TabShell bp={bp} groups={structureImpact(bp)} extra={<AgentsPreview bp={bp} />} left={<>
-          <Section title="Arquitectura" level="obligatorio" hint="Define la forma del proyecto; siembra el árbol y ajusta reglas del starter. Elige por el diagrama.">
+          <Section title="Arquitectura" level="obligatorio" hint="Define la forma del proyecto; siembra el árbol y ajusta reglas del starter. Elige por el diagrama." origin={oo("structure","pattern")}>
             <ArchChoice value={a.pattern} onPick={(v) => {
               setField("architecture.pattern", v);
               if (!(a.tree && a.tree.length) && TREE_TEMPLATES[v]) setField("architecture.tree", structuredClone(TREE_TEMPLATES[v]));
@@ -1050,11 +1078,11 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
             </div>
           </Section>
 
-          <Section title="Naming" level="recomendado">
+          <Section title="Naming" level="recomendado" origin={oo("structure","naming")}>
             <CardChoice options={NAMING} value={a.naming} onPick={(v) => setField("architecture.naming", v)} cols={3} />
           </Section>
 
-          <Section title="Árbol de carpetas" level="recomendado" hint="Estructura que un agente debe recrear. Edita nombres, cambia el tipo con el icono, reordena o parte de una plantilla.">
+          <Section title="Árbol de carpetas" level="recomendado" hint="Estructura que un agente debe recrear. Edita nombres, cambia el tipo con el icono, reordena o parte de una plantilla." origin={oo("structure","tree")}>
             <TreeEditor tree={a.tree ?? []} pattern={a.pattern} onChange={(t) => setField("architecture.tree", t)} />
           </Section>
 
@@ -1108,7 +1136,7 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
             </div>
           </Section>
 
-          <Section title="Formularios" level="obligatorio" hint="Cómo se capturan datos.">
+          <Section title="Formularios" level="obligatorio" hint="Cómo se capturan datos." origin={oo("data","formPreset")}>
             <CardChoice options={FORM_PRESETS} value={d.formPreset} onPick={(v) => setField("data.formPreset", v)} bigWire cols={4} />
             {multiStep && (
               <DepAlert tone="info" target="Interacción" actionLabel="Aplicar" onAction={() => { setField("interaction.navigationPattern", "wizard"); setField("interaction.backSaveDraft", true); }}>
@@ -1127,7 +1155,7 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
             </div>
           </Section>
 
-          <Section title="Tablas y listas" level="obligatorio" hint="Cómo se muestran conjuntos de datos.">
+          <Section title="Tablas y listas" level="obligatorio" hint="Cómo se muestran conjuntos de datos." origin={oo("data","tableLayout")}>
             <CardChoice options={TABLE_LAYOUTS} value={d.tableLayout} onPick={(v) => setField("data.tableLayout", v)} bigWire cols={4} />
             {denseNoFilters && (
               <DepAlert tone="warn" target="esta pestaña">
@@ -1146,7 +1174,7 @@ export default function BrandBehavior({ tab, bp, setField, toggleArray, addIdea,
             </div>
           </Section>
 
-          <Section title="Búsqueda" level="recomendado" hint="Cómo se encuentra información.">
+          <Section title="Búsqueda" level="recomendado" hint="Cómo se encuentra información." origin={oo("data","search")}>
             <CardChoice options={SEARCH_STYLES} value={d.search} onPick={(v) => setField("data.search", v)} bigWire cols={4} />
             {d.search === "command-palette" && (
               <DepAlert tone="info" target="Interacción · AGENTS.md">

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <defs>
+          <linearGradient id="aiGlow_6a3903c78ac91f6202e0803c" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0e172a"/>
+            <stop offset="100%" stop-color="#020617"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#aiGlow_6a3903c78ac91f6202e0803c)"/>
+
+        <!-- Neural Nodes background -->
+        <circle cx="580" cy="180" r="100" fill="radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)" opacity="0.5"/>
+        <circle cx="520" cy="150" r="6" fill="#818cf8"/>
+        <circle cx="620" cy="120" r="8" fill="#38bdf8"/>
+        <circle cx="640" cy="220" r="5" fill="#a855f7"/>
+        <circle cx="560" cy="250" r="7" fill="#818cf8"/>
+        <line x1="520" y1="150" x2="620" y2="120" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+        <line x1="620" y1="120" x2="640" y2="220" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+        <line x1="640" y1="220" x2="560" y2="250" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+        <line x1="560" y1="250" x2="520" y2="150" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+
+        <text x="60" y="130" fill="#818cf8" font-size="11" font-weight="800" letter-spacing="2">AUTONOMOUS INTELLIGENCE</text>
+        <text x="60" y="175" fill="#ffffff" font-size="38" font-weight="900">AlphaWave</text>
+        <text x="60" y="210" fill="rgba(255,255,255,0.65)" font-size="13">Production grade interface specification...</text>
+
+        <rect x="60" y="255" width="150" height="44" rx="8" fill="#6366f1"/>
+        <text x="135" y="282" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="800">OPEN PLAYGROUND</text>
+
+        <rect x="225" y="255" width="140" height="44" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)"/>
+        <text x="295" y="282" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">READ PAPER</text>
+
+        <!-- Telemetry Bar -->
+        <rect x="60" y="345" width="680" height="70" rx="10" fill="#0f172a" stroke="rgba(99,102,241,0.2)"/>
+        <text x="90" y="375" fill="rgba(255,255,255,0.5)" font-size="10">INFERENCE LATENCY</text>
+        <text x="90" y="398" fill="#ffffff" font-size="16" font-weight="800">18.4 MS</text>
+
+        <text x="280" y="375" fill="rgba(255,255,255,0.5)" font-size="10">PARAMETER SCALE</text>
+        <text x="280" y="398" fill="#818cf8" font-size="16" font-weight="800">70B MIXTURE</text>
+
+        <text x="480" y="375" fill="rgba(255,255,255,0.5)" font-size="10">SAFETY BENCHMARK</text>
+        <text x="480" y="398" fill="#10b981" font-size="16" font-weight="800">99.9% VERIFIED</text>
+      </svg>

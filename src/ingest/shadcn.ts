@@ -13,6 +13,13 @@ const SHADCN_COMPONENTS = [
   "resizable", "scroll-area", "select", "separator", "sheet", "sidebar",
   "skeleton", "slider", "sonner", "switch", "table", "tabs", "textarea",
   "toggle", "toggle-group", "tooltip",
+  // Bloques OFICIALES (registry:block, MIT): shells de app completos que llenan
+  // justo el hueco de dashboard/sidebar/tabla/login que faltaba en el catálogo.
+  "sidebar-01", "sidebar-02", "sidebar-03", "sidebar-04", "sidebar-05", "sidebar-06",
+  "sidebar-07", "sidebar-08", "sidebar-09", "sidebar-10", "sidebar-11", "sidebar-12",
+  "sidebar-13", "sidebar-14", "sidebar-15", "sidebar-16",
+  "dashboard-01",
+  "login-01", "login-02", "login-03", "login-04", "login-05",
 ];
 
 export const shadcnAdapter = makeShadcnAdapter({

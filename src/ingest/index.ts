@@ -8,6 +8,8 @@ import { hyperuiAdapter } from "./hyperui";
 import { shadcnAdapter } from "./shadcn";
 import { cultAdapter } from "./cult";
 import { kokonutAdapter } from "./kokonut";
+import { kiboAdapter } from "./kibo";
+import { promptVaultAdapter } from "./promptVault";
 
 const ADAPTERS: Record<string, SourceAdapter> = {
   uiverse: uiverseAdapter,
@@ -18,6 +20,11 @@ const ADAPTERS: Record<string, SourceAdapter> = {
   shadcn: shadcnAdapter,
   cult: cultAdapter,
   kokonut: kokonutAdapter,
+  kibo: kiboAdapter,
+  promptvault: promptVaultAdapter,
+  sceneai: promptVaultAdapter,
+  ipromptui: promptVaultAdapter,
+  vibecoding: promptVaultAdapter,
 };
 
 function parseSources(argv: string[]): string[] {

@@ -260,6 +260,49 @@ export function initDb() {
     CREATE INDEX IF NOT EXISTS idx_bexp_brand ON brand_exports(brand_id);
     CREATE INDEX IF NOT EXISTS idx_bexp_version ON brand_exports(brand_version_id);
   `);
+
+  // Migracion suave: auditoria enriquecida de exportaciones (archivos generados,
+  // omitidos, warnings, y si el pack salio completo o parcial).
+  const bexpCols = new Set(
+    (sqlite.prepare("PRAGMA table_info(brand_exports)").all() as Array<{ name: string }>).map((c) => c.name),
+  );
+  const BEXP_ADDS: Array<[string, string]> = [
+    ["source_label", "TEXT"],       // draft | version:x.y.z
+    ["files_count", "INTEGER"],
+    ["files_json", "TEXT"],         // string[] de rutas generadas
+    ["omitted_json", "TEXT"],       // [{path, reason}]
+    ["warnings_json", "TEXT"],      // string[]
+    ["partial", "INTEGER NOT NULL DEFAULT 0"], // 1 = incompleto (bloqueos/faltantes)
+  ];
+  for (const [name, type] of BEXP_ADDS) {
+    if (!bexpCols.has(name)) sqlite.exec(`ALTER TABLE brand_exports ADD COLUMN ${name} ${type}`);
+  }
+
+  // Auditoria fuerte de IMPORTACIONES (paralela a brand_exports): que se importo,
+  // de donde, cuanto, con runtime o no, y con que resultado. brand_id puede ir
+  // null si aun no se creo la marca (o se rellena al crearla).
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS brand_imports (
+      id TEXT PRIMARY KEY,
+      brand_id TEXT,
+      origin TEXT NOT NULL DEFAULT 'upload',   -- upload | helper | analysis-json
+      root TEXT,
+      tool TEXT,                                -- scan-repo | scan-serve | browser
+      files_scanned INTEGER NOT NULL DEFAULT 0,
+      product_type TEXT,
+      scenes_json TEXT NOT NULL DEFAULT '[]',
+      runtime INTEGER NOT NULL DEFAULT 0,       -- 1 = se pidio runtime
+      runtime_ran INTEGER NOT NULL DEFAULT 0,   -- 1 = runtime observo algo
+      ok INTEGER NOT NULL DEFAULT 1,
+      warnings_json TEXT NOT NULL DEFAULT '[]',
+      errors_json TEXT NOT NULL DEFAULT '[]',
+      duration_ms INTEGER,
+      trace_json TEXT,                          -- TraceReport completo (auditoria)
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_bimp_brand ON brand_imports(brand_id);
+    CREATE INDEX IF NOT EXISTS idx_bimp_created ON brand_imports(created_at);
+  `);
 }
 
 export const db = drizzle(sqlite, { schema });

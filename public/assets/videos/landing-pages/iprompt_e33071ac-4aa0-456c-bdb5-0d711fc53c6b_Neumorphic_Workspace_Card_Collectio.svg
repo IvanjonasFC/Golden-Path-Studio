@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#0a0d14"/>
+        <text x="40" y="50" fill="#38bdf8" font-size="11" font-weight="800" letter-spacing="2">COMPONENT SYSTEM</text>
+        <text x="40" y="80" fill="#ffffff" font-size="22" font-weight="900">Neumorphic Workspace Card Collection</text>
+
+        <!-- Card 1: User Profile Glass Card -->
+        <rect x="40" y="110" width="220" height="320" rx="14" fill="#111624" stroke="rgba(255,255,255,0.08)"/>
+        <rect x="40" y="110" width="220" height="70" rx="14" fill="linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)"/>
+        <circle cx="150" cy="180" r="28" fill="#0f172a" stroke="#ffffff" stroke-width="2"/>
+        <text x="150" y="185" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">UI</text>
+        <text x="150" y="230" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="800">Elena Rostova</text>
+        <text x="150" y="248" text-anchor="middle" fill="#64748b" font-size="10">Lead Design Systems</text>
+        <rect x="70" y="275" width="160" height="30" rx="6" fill="#3b82f6"/>
+        <text x="150" y="294" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">View Portfolio</text>
+
+        <!-- Card 2: Interactive Metric Card -->
+        <rect x="290" y="110" width="220" height="320" rx="14" fill="#111624" stroke="rgba(56,189,248,0.3)" stroke-width="1.5"/>
+        <text x="315" y="145" fill="rgba(255,255,255,0.5)" font-size="10" font-weight="700">DEPLOYMENT SPEED</text>
+        <text x="315" y="180" fill="#ffffff" font-size="28" font-weight="900">99.4%</text>
+        <circle cx="400" cy="260" r="50" fill="none" stroke="#1e293b" stroke-width="10"/>
+        <circle cx="400" cy="260" r="50" fill="none" stroke="#38bdf8" stroke-width="10" stroke-dasharray="260" stroke-dashoffset="60"/>
+        <text x="400" y="266" text-anchor="middle" fill="#38bdf8" font-size="16" font-weight="800">84%</text>
+        <text x="400" y="370" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Production throughput</text>
+
+        <!-- Card 3: Feature Teaser -->
+        <rect x="540" y="110" width="220" height="320" rx="14" fill="#111624" stroke="rgba(255,255,255,0.08)"/>
+        <rect x="565" y="135" width="40" height="40" rx="10" fill="rgba(16,185,129,0.15)"/>
+        <circle cx="585" cy="155" r="8" fill="#10b981"/>
+        <text x="565" y="210" fill="#ffffff" font-size="15" font-weight="800">Token Sync Engine</text>
+        <text x="565" y="235" fill="rgba(255,255,255,0.6)" font-size="11">Automated bidirectional sync between Figma and Tailwind v4 CSS variables.</text>
+        <line x1="565" y1="310" x2="735" y2="310" stroke="rgba(255,255,255,0.08)"/>
+        <text x="565" y="350" fill="#10b981" font-size="12" font-weight="700">Explore integration &rarr;</text>
+      </svg>

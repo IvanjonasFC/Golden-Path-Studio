@@ -117,6 +117,52 @@ function toDp(value: string): string {
   return `${Number.isInteger(dp) ? dp : dp.toFixed(1)}dp`;
 }
 
+function toCamelCase(str: string): string {
+  return str
+    .replace(/^[^a-zA-Z0-9]+/, "")
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
+}
+
+function swiftColorName(path: string): string {
+  return "brand" + toCamelCase(path.replace(/^color\./, ""));
+}
+
+function composeColorName(path: string): string {
+  const c = toCamelCase(path.replace(/^color\./, ""));
+  return c.charAt(0).toLowerCase() + c.slice(1);
+}
+
+function toComposeColorHex(value: string): string {
+  const v = value.trim();
+  if (v.startsWith("#")) {
+    const hex = v.slice(1);
+    if (hex.length === 3) {
+      return `0xFF${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`.toUpperCase();
+    }
+    if (hex.length === 6) {
+      return `0xFF${hex}`.toUpperCase();
+    }
+    if (hex.length === 8) {
+      return `0x${hex}`.toUpperCase();
+    }
+  }
+  return `0xFF888888`;
+}
+
+function toSwiftFloat(value: string): string {
+  const m = value.trim().match(/^(-?\d+(?:\.\d+)?)/);
+  if (!m) return "8.0";
+  const num = parseFloat(m[1]);
+  return Number.isInteger(num) ? `${num}.0` : `${num}`;
+}
+
+function toComposeDp(value: string): string {
+  const m = value.trim().match(/^(-?\d+(?:\.\d+)?)/);
+  if (!m) return "8.dp";
+  const num = parseFloat(m[1]);
+  return `${Number.isInteger(num) ? num : num.toFixed(1)}.dp`;
+}
+
 /* ------------------------------- Compilación ------------------------------- */
 
 /* ------------------------------- Efectos/fondo ------------------------------ */
@@ -302,9 +348,128 @@ export interface CompileResult {
   tailwind: string;
   androidColors: string;
   androidDimens: string;
+  swiftUI: string;
+  jetpackCompose: string;
   js: string;
   /** CSS del fondo (.brand-bg) + gradiente, ya con los efectos aplicados. */
   bg: string;
+}
+
+export function compileSwiftUI(resolved: ResolvedToken[]): string {
+  const colorNodes = resolved.filter((t) => t.type === "color" && /^#|^rgb|^hsl/i.test(t.value));
+  const dimNodes = resolved.filter((t) => t.type === "dimension");
+  const fontNodes = resolved.filter((t) => t.type === "fontFamily");
+
+  const colorProperties = colorNodes
+    .map((t) => `    static let ${swiftColorName(t.path)} = Color(hex: "${t.value}")`)
+    .join("\n");
+
+  const dimProperties = dimNodes
+    .map((t) => `    public static let ${toCamelCase(t.path.replace(/^radius\./, ""))}: CGFloat = ${toSwiftFloat(t.value)}`)
+    .join("\n");
+
+  const fontHeading = fontNodes.find((f) => f.path.includes("heading"))?.value || "Inter";
+  const fontBody = fontNodes.find((f) => f.path.includes("body"))?.value || "system-ui";
+
+  return `// =========================================================================
+// SwiftUI Design Tokens - Golden Path Studio
+// Compatible con iOS 16+, macOS 13+, watchOS 9+, visionOS 1+
+// =========================================================================
+
+import SwiftUI
+
+public extension Color {
+${colorProperties || '    static let brandBg = Color(hex: "#05060A")'}
+}
+
+public struct BrandTypography {
+    public static let headingFontName = "${fontHeading}"
+    public static let bodyFontName = "${fontBody}"
+    
+    public static func heading(size: CGFloat = 24, weight: Font.Weight = .bold) -> Font {
+        return Font.custom(headingFontName, size: size).weight(weight)
+    }
+    
+    public static func body(size: CGFloat = 16, weight: Font.Weight = .regular) -> Font {
+        return Font.custom(bodyFontName, size: size).weight(weight)
+    }
+}
+
+public struct BrandRadii {
+${dimProperties || "    public static let button: CGFloat = 8.0\n    public static let card: CGFloat = 12.0"}
+}
+
+// Inicializador utilitario Hex para SwiftUI Color
+public extension Color {
+    init(hex: String) {
+        let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: clean).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch clean.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255.0,
+            green: Double(g) / 255.0,
+            blue: Double(b) / 255.0,
+            opacity: Double(a) / 255.0
+        )
+    }
+}
+`;
+}
+
+export function compileJetpackCompose(resolved: ResolvedToken[]): string {
+  const colorNodes = resolved.filter((t) => t.type === "color" && /^#|^rgb|^hsl/i.test(t.value));
+  const dimNodes = resolved.filter((t) => t.type === "dimension");
+  const fontNodes = resolved.filter((t) => t.type === "fontFamily");
+
+  const colorProperties = colorNodes
+    .map((t) => `    val ${composeColorName(t.path)} = Color(${toComposeColorHex(t.value)})`)
+    .join("\n");
+
+  const shapeProperties = dimNodes
+    .map((t) => `    val ${composeColorName(t.path)} = ${toComposeDp(t.value)}`)
+    .join("\n");
+
+  const fontHeading = fontNodes.find((f) => f.path.includes("heading"))?.value || "Inter";
+  const fontBody = fontNodes.find((f) => f.path.includes("body"))?.value || "Default";
+
+  return `// =========================================================================
+// Jetpack Compose Design Tokens - Golden Path Studio
+// Compatible con Android Jetpack Compose / Material 3
+// =========================================================================
+
+package com.goldenpath.designsystem.theme
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontFamily
+
+object BrandColors {
+${colorProperties || "    val bg = Color(0xFF05060A)"}
+}
+
+object BrandShapes {
+${shapeProperties || "    val buttonRadius = 8.dp\n    val cardRadius = 12.dp"}
+}
+
+object BrandTypography {
+    const val headingFontFamilyName = "${fontHeading}"
+    const val bodyFontFamilyName = "${fontBody}"
+    val headingFontFamily = FontFamily.Default
+    val bodyFontFamily = FontFamily.Default
+}
+`;
 }
 
 export function compileBrand(doc: TokenGroup): CompileResult {
@@ -338,11 +503,14 @@ export function compileBrand(doc: TokenGroup): CompileResult {
     dimNodes.map((t) => `  <dimen name="${androidName(t.path)}">${toDp(t.value)}</dimen>`).join("\n") +
     `\n</resources>\n`;
 
+  const swiftUI = compileSwiftUI(resolved);
+  const jetpackCompose = compileJetpackCompose(resolved);
+
   const jsObj: Record<string, string> = {};
   for (const t of resolved) jsObj[t.path] = t.value;
   const js = `export const tokens = ${JSON.stringify(jsObj, null, 2)} as const;\n`;
 
-  return { resolved, css, tailwind, androidColors, androidDimens, js, bg: effects.css };
+  return { resolved, css, tailwind, androidColors, androidDimens, swiftUI, jetpackCompose, js, bg: effects.css };
 }
 
 /* ------------------------- Edición siguiendo aliases ------------------------ */
@@ -381,7 +549,29 @@ export function getResolvedValue(doc: TokenGroup, path: string): string | undefi
 export function setTokenValue(doc: TokenGroup, path: string, value: string): TokenGroup {
   const clone: TokenGroup = structuredClone(doc);
   const leaf = leafToken(clone, path);
-  if (leaf) leaf.$value = value;
+  if (leaf) {
+    leaf.$value = value;
+  } else {
+    // Si no existe como leaf o alias, crear la estructura anidada y asignar el token
+    const parts = path.split(".");
+    let curr = clone as Record<string, unknown>;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const p = parts[i];
+      if (!curr[p] || typeof curr[p] !== "object") {
+        curr[p] = {};
+      }
+      curr = curr[p] as Record<string, unknown>;
+    }
+    const lastKey = parts[parts.length - 1];
+    if (curr[lastKey] && typeof curr[lastKey] === "object" && isToken(curr[lastKey])) {
+      (curr[lastKey] as Token).$value = value;
+    } else {
+      curr[lastKey] = {
+        $value: value,
+        $type: inferType(value),
+      };
+    }
+  }
   return clone;
 }
 

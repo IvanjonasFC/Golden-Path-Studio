@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#090d16"/>
+        
+        <!-- Left Sidebar (width 70) -->
+        <rect x="0" y="0" width="70" height="480" fill="#0d1322"/>
+        <line x1="70" y1="0" x2="70" y2="480" stroke="rgba(255,255,255,0.06)"/>
+        <circle cx="35" cy="35" r="14" fill="#3b82f6"/>
+        <rect x="23" y="90" width="24" height="24" rx="6" fill="rgba(59,130,246,0.2)"/>
+        <rect x="23" y="130" width="24" height="24" rx="6" fill="rgba(255,255,255,0.05)"/>
+        <rect x="23" y="170" width="24" height="24" rx="6" fill="rgba(255,255,255,0.05)"/>
+        <rect x="23" y="210" width="24" height="24" rx="6" fill="rgba(255,255,255,0.05)"/>
+
+        <!-- Top Bar -->
+        <rect x="70" y="0" width="730" height="50" fill="#0c111f"/>
+        <line x1="70" y1="50" x2="800" y2="50" stroke="rgba(255,255,255,0.06)"/>
+        <text x="95" y="31" fill="#ffffff" font-size="14" font-weight="800">NEXORA — LIGHT MODE EDITORIAL DASHBOARD HERO</text>
+        <rect x="630" y="13" width="90" height="24" rx="12" fill="#10b981" opacity="0.2"/>
+        <circle cx="645" cy="25" r="4" fill="#10b981"/>
+        <text x="682" y="29" text-anchor="middle" fill="#10b981" font-size="9" font-weight="800">LIVE SYNC</text>
+        <circle cx="755" cy="25" r="12" fill="#1e293b"/>
+
+        <!-- 3 KPI Cards -->
+        <rect x="95" y="70" width="210" height="90" rx="8" fill="#101726" stroke="rgba(255,255,255,0.06)"/>
+        <text x="115" y="96" fill="rgba(255,255,255,0.5)" font-size="10" font-weight="700">TOTAL REVENUE (MRR)</text>
+        <text x="115" y="128" fill="#ffffff" font-size="24" font-weight="900">$148,290</text>
+        <rect x="115" y="138" width="60" height="14" rx="3" fill="rgba(16,185,129,0.15)"/>
+        <text x="145" y="148" text-anchor="middle" fill="#10b981" font-size="8" font-weight="700">+18.4% MoM</text>
+
+        <rect x="330" y="70" width="210" height="90" rx="8" fill="#101726" stroke="rgba(255,255,255,0.06)"/>
+        <text x="350" y="96" fill="rgba(255,255,255,0.5)" font-size="10" font-weight="700">ACTIVE CLIENTS</text>
+        <text x="350" y="128" fill="#ffffff" font-size="24" font-weight="900">3,420</text>
+        <rect x="350" y="138" width="55" height="14" rx="3" fill="rgba(59,130,246,0.15)"/>
+        <text x="377" y="148" text-anchor="middle" fill="#3b82f6" font-size="8" font-weight="700">+8.2% new</text>
+
+        <rect x="565" y="70" width="210" height="90" rx="8" fill="#101726" stroke="rgba(255,255,255,0.06)"/>
+        <text x="585" y="96" fill="rgba(255,255,255,0.5)" font-size="10" font-weight="700">NET CONVERSION</text>
+        <text x="585" y="128" fill="#ffffff" font-size="24" font-weight="900">4.82%</text>
+        <rect x="585" y="138" width="50" height="14" rx="3" fill="rgba(16,185,129,0.15)"/>
+        <text x="610" y="148" text-anchor="middle" fill="#10b981" font-size="8" font-weight="700">+1.2% opt</text>
+
+        <!-- Main Chart Container -->
+        <rect x="95" y="180" width="680" height="270" rx="10" fill="#101726" stroke="rgba(255,255,255,0.06)"/>
+        <text x="120" y="210" fill="#ffffff" font-size="14" font-weight="800">Growth Telemetry &amp; Component Ingest</text>
+        <text x="120" y="228" fill="rgba(255,255,255,0.5)" font-size="11">Real-time throughput metrics over past 30 days</text>
+
+        <!-- Area Graph Lines -->
+        <path d="M 120 400 L 180 370 L 250 380 L 320 330 L 400 340 L 480 290 L 560 300 L 640 250 L 730 240 L 730 410 L 120 410 Z" fill="rgba(59,130,246,0.1)"/>
+        <path d="M 120 400 L 180 370 L 250 380 L 320 330 L 400 340 L 480 290 L 560 300 L 640 250 L 730 240" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+        <circle cx="730" cy="240" r="5" fill="#3b82f6"/>
+        <circle cx="640" cy="250" r="4" fill="#3b82f6"/>
+        <circle cx="480" cy="290" r="4" fill="#3b82f6"/>
+
+        <line x1="120" y1="410" x2="730" y2="410" stroke="rgba(255,255,255,0.1)"/>
+        <text x="120" y="428" fill="rgba(255,255,255,0.4)" font-size="9">WEEK 1</text>
+        <text x="320" y="428" fill="rgba(255,255,255,0.4)" font-size="9">WEEK 2</text>
+        <text x="520" y="428" fill="rgba(255,255,255,0.4)" font-size="9">WEEK 3</text>
+        <text x="710" y="428" fill="rgba(255,255,255,0.4)" font-size="9">WEEK 4</text>
+      </svg>

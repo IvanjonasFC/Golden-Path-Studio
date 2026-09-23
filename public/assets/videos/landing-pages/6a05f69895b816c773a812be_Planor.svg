@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <defs>
+          <linearGradient id="saasBg_6a05f69895b816c773a812be" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0a0f1d"/>
+            <stop offset="100%" stop-color="#060811"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#saasBg_6a05f69895b816c773a812be)"/>
+        
+        <!-- Top Nav -->
+        <rect x="0" y="0" width="800" height="48" fill="rgba(0,0,0,0.3)"/>
+        <line x1="0" y1="48" x2="800" y2="48" stroke="rgba(255,255,255,0.06)"/>
+        <circle cx="35" cy="24" r="6" fill="#3b82f6"/>
+        <text x="50" y="28" fill="#ffffff" font-size="12" font-weight="700" letter-spacing="1">GOLDEN PATH</text>
+        <rect x="710" y="13" width="60" height="22" rx="6" fill="rgba(59,130,246,0.2)" stroke="rgba(59,130,246,0.5)"/>
+        <text x="740" y="27" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">SPEC</text>
+
+        <!-- Main Hero Copy -->
+        <rect x="330" y="110" width="140" height="22" rx="11" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.4)"/>
+        <text x="400" y="125" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="800" letter-spacing="1">PRODUCTION RELEASE</text>
+
+        <text x="400" y="175" text-anchor="middle" fill="#ffffff" font-size="34" font-weight="900">Planor</text>
+        <text x="400" y="208" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-size="13">Production grade interface specification...</text>
+
+        <!-- Action Buttons -->
+        <rect x="270" y="245" width="120" height="40" rx="8" fill="#3b82f6"/>
+        <text x="330" y="270" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="800">GET STARTED</text>
+
+        <rect x="410" y="245" width="120" height="40" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.2)"/>
+        <text x="470" y="270" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">LIVE DEMO</text>
+
+        <!-- Preview UI Frame at bottom -->
+        <rect x="120" y="320" width="560" height="160" rx="10" fill="#111728" stroke="rgba(255,255,255,0.1)"/>
+        <rect x="120" y="320" width="560" height="30" rx="10" fill="#171f33"/>
+        <circle cx="140" cy="335" r="4" fill="#ef4444"/>
+        <circle cx="152" cy="335" r="4" fill="#f59e0b"/>
+        <circle cx="164" cy="335" r="4" fill="#10b981"/>
+        <text x="185" y="339" fill="rgba(255,255,255,0.4)" font-size="9" font-family="monospace">https://app.goldenpath.dev/6a05f69895b816c773a812be</text>
+
+        <rect x="145" y="370" width="150" height="70" rx="6" fill="rgba(255,255,255,0.04)"/>
+        <rect x="315" y="370" width="150" height="70" rx="6" fill="rgba(255,255,255,0.04)"/>
+        <rect x="485" y="370" width="165" height="70" rx="6" fill="rgba(255,255,255,0.04)"/>
+      </svg>

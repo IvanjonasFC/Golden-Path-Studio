@@ -51,11 +51,11 @@ body {
   overflow-x: hidden;
   /* Glow naranja + rejilla sutil — idéntico al portfolio */
   background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     radial-gradient(circle at 50% -8%, rgba(240, 164, 112, 0.12), transparent 46%),
-    radial-gradient(circle at 88% 12%, rgba(240, 164, 112, 0.07), transparent 42%),
-    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 34px 34px, 34px 34px;
+    radial-gradient(circle at 88% 12%, rgba(240, 164, 112, 0.07), transparent 42%);
+  background-size: 34px 34px, 34px 34px, 100% 100%, 100% 100%;
   background-attachment: fixed;
 }
 
@@ -96,6 +96,16 @@ h1, h2, h3, h4, h5, h6 {
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(240, 164, 112, 0.4) transparent;
+}
+
+.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* ============================================================
@@ -158,12 +168,12 @@ html.light body {
   color: #2B2620;
   background-color: #F4EEE4;
   background-image:
+    linear-gradient(to right, rgba(120, 80, 40, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 80, 40, 0.07) 1px, transparent 1px),
     radial-gradient(circle at 50% -8%,  rgba(224, 130, 79, 0.08), transparent 46%),
     radial-gradient(circle at 85% 18%,  rgba(224, 130, 79, 0.05), transparent 42%),
-    radial-gradient(circle at 8%  72%,  rgba(224, 130, 79, 0.04), transparent 45%),
-    linear-gradient(to right, rgba(120, 80, 40, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(120, 80, 40, 0.05) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+    radial-gradient(circle at 8%  72%,  rgba(224, 130, 79, 0.04), transparent 45%);
+  background-size: 32px 32px, 32px 32px, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
 }
 
@@ -182,7 +192,8 @@ html.light .glass {
 
 /* Tarjetas y superficies */
 html.light .card-surface {
-  background: rgba(252, 248, 241, 0.70);
+  background: rgba(252, 248, 241, 0.55);
+  backdrop-filter: blur(6px);
   border-color: #EAE2D6;
 }
 
@@ -216,10 +227,18 @@ html.light .border-white\/5  { border-color: rgba(0,0,0,0.07) !important; }
 html.light .border-white\/10 { border-color: rgba(0,0,0,0.10) !important; }
 html.light .border-white\/20 { border-color: rgba(0,0,0,0.15) !important; }
 
-/* Nav scrolled en tema claro */
+/* Nav scrolled / colapsado dinámico según tema */
+[data-scrolled="true"]#nav-inner {
+  background: color-mix(in srgb, var(--color-bg) 85%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-color: var(--color-border) !important;
+}
+
 html.light [data-scrolled="true"]#nav-inner {
-  background: rgba(237, 240, 244, 0.92) !important;
-  border-color: rgba(0,0,0,0.10) !important;
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: 0 10px 25px -5px rgba(43, 38, 32, 0.12), 0 8px 10px -6px rgba(43, 38, 32, 0.08) !important;
 }
 
 /* Inputs y selects */

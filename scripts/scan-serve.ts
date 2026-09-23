@@ -26,14 +26,20 @@
    ============================================================================ */
 import http from "node:http";
 import { execFile } from "node:child_process";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { collectFiles, deriveRoutes } from "./walkRepo";
-import { buildAnalysis, attachRuntime, emptyRuntime } from "../src/lib/analysis";
+import { buildAnalysis, attachRuntime, attachTrace, emptyRuntime } from "../src/lib/analysis";
 import { runRuntime, detectBaseURL } from "./runtime";
+import { writeImportLog } from "./importLog";
+import { Tracer } from "../src/lib/trace";
 
 const PORT = Number(process.env.SCAN_PORT || 4319);
 const HOST = "127.0.0.1";
+const _require = createRequire(import.meta.url);
+let HAS_PLAYWRIGHT = false;
+try { _require.resolve("playwright"); HAS_PLAYWRIGHT = true; } catch { HAS_PLAYWRIGHT = false; }
 
 function cors(res: http.ServerResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");           // solo escucha en localhost
@@ -98,7 +104,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") { cors(res); res.writeHead(204); res.end(); return; }
   const url = new URL(req.url || "/", `http://${HOST}:${PORT}`);
 
-  if (url.pathname === "/health") { json(res, 200, { ok: true, tool: "scan-serve", port: PORT }); return; }
+  if (url.pathname === "/health") { json(res, 200, { ok: true, tool: "scan-serve", port: PORT, playwright: HAS_PLAYWRIGHT }); return; }
 
   // Selector nativo: la web pide abrir el explorador de Windows y recibe la ruta.
   if (url.pathname === "/pick") {
@@ -134,10 +140,14 @@ const server = http.createServer(async (req, res) => {
       const st = await fs.stat(root);
       if (!st.isDirectory()) { json(res, 400, { error: `No es una carpeta: ${root}` }); return; }
     } catch { json(res, 404, { error: `Ruta no encontrada: ${root}` }); return; }
+    const tracer = new Tracer({ echo: true, prefix: "scan-serve" });
+    tracer.emit("scan_started", { root, tool: "scan-serve", runtime: wantRuntime });
     try {
       const files = await collectFiles(root);
-      if (!files.length) { json(res, 404, { error: "Sin archivos de texto analizables." }); return; }
-      let report = buildAnalysis(files, { root, tool: "scan-serve" });
+      if (!files.length) { tracer.error("import_failed", "Sin archivos de texto analizables."); json(res, 404, { error: "Sin archivos de texto analizables." }); return; }
+      const routes = deriveRoutes(files);
+      tracer.emit("routes_detected", { count: routes.length, routes });
+      let report = buildAnalysis(files, { root, tool: "scan-serve", tracer });
       console.log(`. analizado ${root} -> ${files.length} archivos`);
 
       if (wantRuntime) {
@@ -145,15 +155,14 @@ const server = http.createServer(async (req, res) => {
         let source: "manual" | "autodetect" | "none" = baseURL ? "manual" : "none";
         if (!baseURL) { baseURL = await detectBaseURL(); if (baseURL) source = "autodetect"; }
         if (!baseURL) {
-          report = attachRuntime(report, emptyRuntime({
-            enabled: true, baseURLSource: "none",
-            errors: ["Runtime pedido pero no hay dev server local en marcha ni baseURL. Arranca el proyecto (p. ej. `npm run dev`) o pasa baseURL."],
-          }));
+          const m = "Runtime pedido pero no hay dev server local en marcha ni baseURL. Arranca el proyecto (p. ej. `npm run dev`) o pasa baseURL.";
+          tracer.error("runtime_failed", m);
+          report = attachRuntime(report, emptyRuntime({ enabled: true, baseURLSource: "none", errors: [m] }));
           console.log("  runtime: sin baseURL (omitido, honesto)");
         } else {
           const s = report.summary;
           const runtime = await runRuntime({
-            root, baseURL, baseURLSource: source, routes: deriveRoutes(files),
+            root, baseURL, baseURLSource: source, routes, tracer,
             staticHints: { navigation: s.navigation?.value, architecture: s.architecture?.value, productType: s.productType?.value },
           });
           report = attachRuntime(report, runtime);
@@ -161,8 +170,12 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      report = attachTrace(report, tracer.report());
+      const logPath = await writeImportLog(root, report);
+      if (logPath) console.log(`  log de importación → ${logPath}`);
+
       json(res, 200, report);
-    } catch (e) { json(res, 500, { error: String((e as Error).message || e) }); }
+    } catch (e) { tracer.error("import_failed", String((e as Error).message || e)); json(res, 500, { error: String((e as Error).message || e) }); }
     return;
   }
 

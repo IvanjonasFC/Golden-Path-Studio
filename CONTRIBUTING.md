@@ -1,33 +1,56 @@
-# Contribuir a Golden Path Studio
+# Contributing to Golden Path Studio
 
-Gracias por tu interés. Este proyecto es una herramienta local-first para
-catalogar componentes UI y reconstruir sistemas de diseño desde proyectos reales.
+Thanks for your interest. Golden Path Studio is a local-first tool for cataloging UI
+components and defining reusable brand blueprints.
 
-## Requisitos
-- Node.js 20+ (recomendado 22)
-- git en el PATH
+## Prerequisites
 
-## Puesta en marcha
+- Node.js 20+ (22 recommended)
+- git on your `PATH`
+
+## Getting started
+
 ```bash
 npm install
 cp .env.example .env
 npm run dev
 ```
 
-## Flujo de trabajo
-1. Crea una rama desde `main`: `git checkout -b feat/mi-cambio`.
-2. Mantén el estilo del repo. Antes de abrir PR:
+Populate the catalog with `npm run ingest` (the database is not committed and is
+regenerated from the sources).
+
+## Workflow
+
+1. Branch from `main`: `git checkout -b feat/my-change`.
+2. Match the existing code style. Before opening a PR:
    ```bash
    npm run lint
    npm run build
    ```
-3. Commits con mensajes claros (se recomienda Conventional Commits: `feat:`, `fix:`, `docs:`…).
-4. Abre un Pull Request describiendo el cambio y su motivación.
+3. Use clear commit messages — Conventional Commits are encouraged
+   (`feat:`, `fix:`, `docs:`, `chore:` …).
+4. Open a Pull Request describing the change and its motivation.
 
-## Principios de arquitectura
-- **Determinista y trazable primero**: cada dato inferido viaja con su confianza y su fuente.
-- **Un solo motor**: sin pipelines paralelos; el CLI, el helper `scan-serve` y el navegador comparten `extractIdentity` / `inferBlueprint`.
-- **Evolución incremental**: nada de rewrites "big-bang".
+## Architecture principles
 
-## Reportar problemas
-Usa las plantillas de issue (bug / feature) en `.github/ISSUE_TEMPLATE`.
+- **One engine.** Search, blueprint resolution and scene rendering each have a single
+  implementation shared by every surface (web, MCP, exporter). Do not add parallel
+  pipelines.
+- **Deterministic and traceable.** Inferred values travel with their origin and are
+  validated; never silently overwrite a required value with a default.
+- **Reference, don't duplicate.** Collections and scenes reference catalog components by
+  id; assignments are preserved, never silently deleted.
+- **Incremental.** Extend through adapters, slots and layers — no big-bang rewrites.
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full design.
+
+## Adding a source
+
+Create an adapter under `src/ingest/`, register it in the `ADAPTERS` map in
+`src/ingest/index.ts`, and run `npm run ingest -- --source <name>`. The web and MCP
+server need no changes — they read the same table.
+
+## Reporting issues
+
+Use the bug / feature templates in `.github/ISSUE_TEMPLATE`. For security reports, see
+[SECURITY.md](SECURITY.md) instead of opening a public issue.

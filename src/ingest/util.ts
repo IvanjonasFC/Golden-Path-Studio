@@ -1,5 +1,6 @@
 import { sqlite, initDb } from "../db/index";
 import type { ComponentFile } from "../lib/types";
+import { canonicalCategory } from "./categorize";
 
 /** Lo que un adaptador produce por componente (antes de serializar a SQLite). */
 export interface IngestItem {
@@ -73,7 +74,7 @@ export function upsertMany(items: IngestItem[]): number {
         framework: it.framework,
         name: it.name,
         slug: it.slug,
-        category: it.category,
+        category: canonicalCategory(it.category, it.name, it.tags ?? []),
         type: it.type,
         author: it.author ?? null,
         license: it.license ?? null,

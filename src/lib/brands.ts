@@ -390,18 +390,26 @@ export function restoreBrandVersion(brandId: string, versionOrId: string): Brand
 export interface BrandExportInput {
   brandId?: string | null;
   brandVersionId?: string | null;   // null = export desde draft
-  mode?: string;                     // tokens | starter | agents | full
+  mode?: string;                     // theme | docs | full
   target?: string;                   // all | web | android | js …
   outDir?: string | null;
   resolvedHash?: string | null;      // hash del resolvedConfig exportado
   status?: string;                   // ok | failed
   errorMsg?: string | null;
+  // Auditoría enriquecida (opcional):
+  sourceLabel?: string | null;       // draft | version:x.y.z
+  files?: string[];                  // rutas generadas
+  omitted?: { path: string; reason: string }[]; // no generado y por qué
+  warnings?: string[];
+  partial?: boolean;                 // true = incompleto (bloqueos/faltantes)
 }
 
 export interface BrandExportDTO {
   id: string; brandId: string | null; brandVersionId: string | null;
   mode: string; target: string; outDir: string | null; resolvedHash: string | null;
   status: string; errorMsg: string | null; createdAt: number;
+  sourceLabel: string | null; filesCount: number | null; files: string[];
+  omitted: { path: string; reason: string }[]; warnings: string[]; partial: boolean;
 }
 
 export function recordBrandExport(input: BrandExportInput): string {
@@ -410,13 +418,21 @@ export function recordBrandExport(input: BrandExportInput): string {
   sqlite
     .prepare(
       `INSERT INTO brand_exports
-         (id, brand_id, brand_version_id, mode, target, out_dir, resolved_hash, status, error_msg, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, brand_id, brand_version_id, mode, target, out_dir, resolved_hash, status, error_msg,
+          source_label, files_count, files_json, omitted_json, warnings_json, partial, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       id, input.brandId ?? null, input.brandVersionId ?? null,
-      input.mode ?? "tokens", input.target ?? "all", input.outDir ?? null,
-      input.resolvedHash ?? null, input.status ?? "ok", input.errorMsg ?? null, now,
+      input.mode ?? "full", input.target ?? "all", input.outDir ?? null,
+      input.resolvedHash ?? null, input.status ?? "ok", input.errorMsg ?? null,
+      input.sourceLabel ?? null,
+      input.files ? input.files.length : null,
+      input.files ? JSON.stringify(input.files) : null,
+      input.omitted ? JSON.stringify(input.omitted) : null,
+      input.warnings ? JSON.stringify(input.warnings) : null,
+      input.partial ? 1 : 0,
+      now,
     );
   return id;
 }
@@ -425,13 +441,33 @@ interface BrandExportRow {
   id: string; brand_id: string | null; brand_version_id: string | null;
   mode: string; target: string; out_dir: string | null; resolved_hash: string | null;
   status: string; error_msg: string | null; created_at: number;
+  source_label: string | null; files_count: number | null; files_json: string | null;
+  omitted_json: string | null; warnings_json: string | null; partial: number | null;
 }
-export function listBrandExports(brandId: string): BrandExportDTO[] {
+function jParseArr<T>(raw: string | null): T[] { if (!raw) return []; try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; } }
+function bexpRowToDTO(r: BrandExportRow): BrandExportDTO {
+  return {
+    id: r.id, brandId: r.brand_id, brandVersionId: r.brand_version_id,
+    mode: r.mode, target: r.target, outDir: r.out_dir, resolvedHash: r.resolved_hash,
+    status: r.status, errorMsg: r.error_msg, createdAt: r.created_at,
+    sourceLabel: r.source_label, filesCount: r.files_count,
+    files: jParseArr<string>(r.files_json),
+    omitted: jParseArr<{ path: string; reason: string }>(r.omitted_json),
+    warnings: jParseArr<string>(r.warnings_json),
+    partial: !!r.partial,
+  };
+}
+export function listBrandExports(brandId: string, limit = 20): BrandExportDTO[] {
+  const n = Math.min(Math.max(limit, 1), 100);
   return (sqlite
-    .prepare("SELECT * FROM brand_exports WHERE brand_id = ? ORDER BY created_at DESC")
-    .all(brandId) as BrandExportRow[]).map((r) => ({
-      id: r.id, brandId: r.brand_id, brandVersionId: r.brand_version_id,
-      mode: r.mode, target: r.target, outDir: r.out_dir, resolvedHash: r.resolved_hash,
-      status: r.status, errorMsg: r.error_msg, createdAt: r.created_at,
-    }));
+    .prepare("SELECT * FROM brand_exports WHERE brand_id = ? ORDER BY created_at DESC LIMIT ?")
+    .all(brandId, n) as BrandExportRow[]).map(bexpRowToDTO);
+}
+
+/** Todas las exportaciones (cross-marca), más recientes primero — para la consola de Actividad. */
+export function listAllBrandExports(limit = 30): BrandExportDTO[] {
+  const n = Math.min(Math.max(limit, 1), 100);
+  return (sqlite
+    .prepare("SELECT * FROM brand_exports ORDER BY created_at DESC LIMIT ?")
+    .all(n) as BrandExportRow[]).map(bexpRowToDTO);
 }

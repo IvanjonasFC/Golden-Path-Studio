@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#0a0c14"/>
+        <text x="400" y="55" text-anchor="middle" fill="#10b981" font-size="11" font-weight="800" letter-spacing="2">CUSTOMER REVIEWS</text>
+        <text x="400" y="90" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="900">Buildscale Testimonials</text>
+
+        <!-- Testimonial 1 -->
+        <rect x="40" y="130" width="220" height="290" rx="12" fill="#101524" stroke="rgba(255,255,255,0.08)"/>
+        <text x="65" y="165" fill="#f59e0b" font-size="14" letter-spacing="2">*****</text>
+        <text x="65" y="195" fill="#ffffff" font-size="12" font-weight="600">&ldquo;The fastest way to ship production UI. Absolutely indispensable for our sprint delivery.&rdquo;</text>
+        <circle cx="85" cy="370" r="16" fill="#3b82f6"/>
+        <text x="85" y="375" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">SC</text>
+        <text x="115" y="367" fill="#ffffff" font-size="12" font-weight="700">Sarah Chen</text>
+        <text x="115" y="382" fill="#64748b" font-size="10">VP Eng @ HyperScale</text>
+
+        <!-- Testimonial 2 -->
+        <rect x="290" y="130" width="220" height="290" rx="12" fill="#121829" stroke="rgba(16,185,129,0.3)" stroke-width="1.5"/>
+        <text x="315" y="165" fill="#f59e0b" font-size="14" letter-spacing="2">*****</text>
+        <text x="315" y="195" fill="#ffffff" font-size="12" font-weight="600">&ldquo;The master prompts generate better bespoke code than most senior contractors we worked with.&rdquo;</text>
+        <circle cx="335" cy="370" r="16" fill="#10b981"/>
+        <text x="335" y="375" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">MR</text>
+        <text x="365" y="367" fill="#ffffff" font-size="12" font-weight="700">Marc Raymond</text>
+        <text x="365" y="382" fill="#64748b" font-size="10">Founding CTO @ Orbit</text>
+
+        <!-- Testimonial 3 -->
+        <rect x="540" y="130" width="220" height="290" rx="12" fill="#101524" stroke="rgba(255,255,255,0.08)"/>
+        <text x="565" y="165" fill="#f59e0b" font-size="14" letter-spacing="2">*****</text>
+        <text x="565" y="195" fill="#ffffff" font-size="12" font-weight="600">&ldquo;Clean Tailwind architecture and perfect responsive scaling on mobile out of the box.&rdquo;</text>
+        <circle cx="585" cy="370" r="16" fill="#8b5cf6"/>
+        <text x="585" y="375" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">EV</text>
+        <text x="615" y="367" fill="#ffffff" font-size="12" font-weight="700">Elena Vance</text>
+        <text x="615" y="382" fill="#64748b" font-size="10">Lead Product Designer</text>
+      </svg>

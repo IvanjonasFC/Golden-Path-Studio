@@ -29,6 +29,7 @@ export type ExportMode = "theme" | "docs" | "full";
 
 export interface CompileLike {
   css: string; tailwind: string; js: string; androidColors: string; androidDimens: string;
+  swiftUI?: string; jetpackCompose?: string;
 }
 export interface ExportBrand {
   id: string; name: string; slug: string; description: string | null;
@@ -331,7 +332,117 @@ function agentsMd(inp: In): string {
   ].join("\n");
 }
 
+/* ------------------------------ auditoría ---------------------------------- */
+export interface ExportOmission { path: string; reason: string; }
+export interface ExportAudit {
+  mode: ExportMode;
+  sourceKind: "draft" | "version";
+  sourceVersion: string | null;
+  resolvedHash: string | null;
+  coverage: number;                 // 0..1
+  canPublish: boolean;
+  filesGenerated: string[];
+  filesOmitted: ExportOmission[];
+  warnings: string[];
+  blocking: string[];
+  missingComponents: number;
+  partial: boolean;                 // true = incompleto (bloqueos/faltantes)
+  generatedAt: number;
+}
+
+/** Componentes referenciados por la marca que no están en el catálogo. */
+function missingComponentIds(brand: ExportBrand): string[] {
+  return brand.previewIds.filter((id) => !getComponent(id));
+}
+
+/** Calcula la auditoría del pack: qué salió, qué se omitió y por qué. */
+function computeExportAudit(inp: In, mode: ExportMode, generatedKeys: string[]): ExportAudit {
+  const v = inp.resolution.validationReport;
+  const wantTokens = mode === "theme" || mode === "full";
+  const wantFull = mode === "full";
+  const wantDocs = mode === "docs" || mode === "full";
+
+  const omitted: ExportOmission[] = [];
+  if (!wantTokens) omitted.push({ path: "tokens/", reason: `modo=${mode}: no incluye tokens de estilo` });
+  if (!wantFull) {
+    omitted.push({ path: "resolved/", reason: "solo en modo full (config resuelta, escenas, slots, componentes)" });
+    omitted.push({ path: "project/", reason: "solo en modo full (arquitectura, árbol, librerías, seguridad, datos)" });
+    omitted.push({ path: "starter/", reason: "solo en modo full (metadatos de plantilla/preset)" });
+    omitted.push({ path: "parts/", reason: "solo en modo full (bloques HTML de la marca)" });
+  }
+  if (!wantDocs) omitted.push({ path: "*.md", reason: `modo=${mode}: no incluye documentación humana/IA` });
+
+  const missing = missingComponentIds(inp.brand);
+  const warnings: string[] = [...v.warnings];
+  if (missing.length) warnings.push(`${missing.length} componente(s) referenciados no están en el catálogo (se marcan como missing): ${missing.slice(0, 6).join(", ")}${missing.length > 6 ? "…" : ""}.`);
+  if (inp.source.kind === "draft") warnings.push("Exportado desde draft (no snapshot publicado): el pack puede cambiar en la próxima edición. Para trazabilidad estable, publica una versión.");
+
+  const partial = v.blockingIssues.length > 0 || missing.length > 0;
+
+  return {
+    mode,
+    sourceKind: inp.source.kind,
+    sourceVersion: inp.source.kind === "version" ? (inp.source.version ?? null) : null,
+    resolvedHash: inp.resolvedHash,
+    coverage: v.coverage,
+    canPublish: v.canPublish,
+    filesGenerated: generatedKeys,
+    filesOmitted: omitted,
+    warnings,
+    blocking: v.blockingIssues,
+    missingComponents: missing.length,
+    partial,
+    generatedAt: Date.now(),
+  };
+}
+
+/** EXPORT_AUDIT.md reforzado con archivos generados/omitidos, warnings y estado. */
+function auditMdRich(inp: In, a: ExportAudit): string {
+  const s = inp.source;
+  const fuente = s.kind === "version"
+    ? "snapshot v" + s.version + " (" + (s.versionId ?? "?") + "), publicado " + whenStr(s.createdAt)
+    : "draft actual (sin publicar)";
+  const list = (xs: string[]) => (xs.length ? xs.map((x) => "- " + x).join("\n") : "- —");
+  return [
+    "# EXPORT_AUDIT — " + inp.brand.name,
+    "",
+    "- Generado: " + whenStr(a.generatedAt),
+    "- Modo: " + a.mode,
+    "- Fuente: " + fuente,
+    "- Hash resolvedConfig: " + (a.resolvedHash ?? "—"),
+    "- Cobertura: " + pct(a.coverage) + "%",
+    "- Estado: " + (a.partial ? "PARCIAL" : "COMPLETO") + (a.canPublish ? " · publicable" : " · bloqueado (" + a.blocking.length + ")"),
+    "",
+    "## Archivos generados (" + a.filesGenerated.length + ")",
+    list(a.filesGenerated),
+    "",
+    "## No generado (por modo)",
+    a.filesOmitted.length ? a.filesOmitted.map((o) => "- " + o.path + " — " + o.reason).join("\n") : "- (nada; el pack incluye todas las capas)",
+    "",
+    "## Bloqueos (required faltantes)",
+    list(a.blocking),
+    "",
+    "## Warnings",
+    list(a.warnings),
+    "",
+    "## Integridad",
+    "La fuente de verdad es resolved/resolved.config.json (solo en modo full). tokens/ y project/ derivan de ella. Si exportas desde draft, este pack puede cambiar en la próxima edición: para trazabilidad estable, exporta desde una versión publicada. La versión máquina de esta auditoría está en EXPORT_LOG.json.",
+    "",
+  ].join("\n");
+}
+
 /* ------------------------------ ensamblador -------------------------------- */
+/** Ensambla el pack Y su auditoría: añade EXPORT_LOG.json (máquina) y refuerza
+ *  EXPORT_AUDIT.md (humano). Úsalo desde el endpoint para registrar auditoría. */
+export function buildBrandExport(inp: In, mode: ExportMode): { files: Record<string, string>; audit: ExportAudit } {
+  const files = buildBrandExportFiles(inp, mode);
+  const audit = computeExportAudit(inp, mode, Object.keys(files));
+  files["EXPORT_LOG.json"] = J(audit);
+  if (files["EXPORT_AUDIT.md"] !== undefined) files["EXPORT_AUDIT.md"] = auditMdRich(inp, audit);
+  audit.filesGenerated = Object.keys(files);   // incluye EXPORT_LOG.json
+  return { files, audit };
+}
+
 export function buildBrandExportFiles(inp: In, mode: ExportMode): Record<string, string> {
   const files: Record<string, string> = {};
   const rc = inp.resolution.resolvedConfig;
@@ -348,6 +459,12 @@ export function buildBrandExportFiles(inp: In, mode: ExportMode): Record<string,
     files["tokens/tokens.js"] = inp.compile.js;
     files["tokens/android/colors.xml"] = inp.compile.androidColors;
     files["tokens/android/dimens.xml"] = inp.compile.androidDimens;
+    if (inp.compile.swiftUI) {
+      files["tokens/ios/BrandDesignSystem.swift"] = inp.compile.swiftUI;
+    }
+    if (inp.compile.jetpackCompose) {
+      files["tokens/android/compose/BrandTokens.kt"] = inp.compile.jetpackCompose;
+    }
   }
 
   if (wantFull) {

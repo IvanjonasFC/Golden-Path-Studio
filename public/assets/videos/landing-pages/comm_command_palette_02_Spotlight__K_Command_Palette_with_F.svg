@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#07090e"/>
+        <!-- Dimmed backdrop simulation -->
+        <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)"/>
+
+        <!-- Command Palette Modal (w 520, h 340, center cx 400, cy 240) -->
+        <rect x="140" y="70" width="520" height="340" rx="12" fill="#10141f" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+        
+        <!-- Search Input Bar -->
+        <rect x="140" y="70" width="520" height="56" rx="12" fill="#151b2a"/>
+        <line x1="140" y1="126" x2="660" y2="126" stroke="rgba(255,255,255,0.1)"/>
+        <circle cx="175" cy="98" r="7" fill="none" stroke="#64748b" stroke-width="2"/>
+        <line x1="180" y1="103" x2="186" y2="109" stroke="#64748b" stroke-width="2"/>
+        <text x="200" y="103" fill="#ffffff" font-size="14">Search components, actions or prompts...</text>
+        <rect x="600" y="86" width="44" height="24" rx="5" fill="#1e293b" stroke="rgba(255,255,255,0.1)"/>
+        <text x="622" y="102" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700">ESC</text>
+
+        <!-- Section: SUGGESTED ACTIONS -->
+        <text x="165" y="152" fill="#64748b" font-size="10" font-weight="800" letter-spacing="1">QUICK ACTIONS</text>
+
+        <!-- Row 1: Active item -->
+        <rect x="155" y="165" width="490" height="42" rx="6" fill="#3b82f6"/>
+        <text x="175" y="191" fill="#ffffff" font-size="13" font-weight="700">Generate Master UI Prompt</text>
+        <rect x="580" y="176" width="50" height="20" rx="4" fill="rgba(0,0,0,0.2)"/>
+        <text x="605" y="190" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="700">ACTION</text>
+
+        <!-- Row 2 -->
+        <rect x="155" y="213" width="490" height="40" rx="6" fill="#131826"/>
+        <text x="175" y="238" fill="#e2e8f0" font-size="13">Switch Active Brand Profile</text>
+        <text x="625" y="238" text-anchor="end" fill="#64748b" font-size="10">Brand Hub</text>
+
+        <!-- Row 3 -->
+        <rect x="155" y="259" width="490" height="40" rx="6" fill="#131826"/>
+        <text x="175" y="284" fill="#e2e8f0" font-size="13">Open 4,913 Component Code Vault</text>
+        <text x="625" y="284" text-anchor="end" fill="#64748b" font-size="10">Catalog</text>
+
+        <!-- Row 4 -->
+        <rect x="155" y="305" width="490" height="40" rx="6" fill="#131826"/>
+        <text x="175" y="330" fill="#e2e8f0" font-size="13">Toggle Dark / Light Studio Mode</text>
+        <text x="625" y="330" text-anchor="end" fill="#64748b" font-size="10">Preferences</text>
+
+        <!-- Bottom Hotkey Bar -->
+        <line x1="140" y1="365" x2="660" y2="365" stroke="rgba(255,255,255,0.08)"/>
+        <text x="165" y="392" fill="#64748b" font-size="11">Use arrow keys to navigate · Enter to select · Esc to close</text>
+      </svg>

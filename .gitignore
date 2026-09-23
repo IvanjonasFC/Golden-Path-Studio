@@ -1,34 +1,34 @@
-# Dependencias / build
+# Dependencies / build
 node_modules
 .next
 out
 build
 *.tsbuildinfo
 
-# Entorno
+# Environment
 .env
 .env.local
 .env.*.local
 
-# Logs / temporales
+# Logs / temporary
 *.log
 /tmp
 /.cache
 
-# BD y ficheros regenerables (npm run ingest)
+# Database and regenerable files (npm run ingest)
 /data/*.db
 /data/*.db-wal
 /data/*.db-shm
 /data/suggestions-cache.json
 
-# Salidas / scratch
+# Outputs / scratch
 /exports
 /scratch
 /Claude outputs
 Basura/
 *.bak
 
-# OS / editores
+# OS / editors
 .DS_Store
 .idea
 .vscode

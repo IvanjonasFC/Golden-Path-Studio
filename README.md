@@ -1,171 +1,278 @@
+<div align="center">
+
 # Golden Path Studio
 
-![License: MIT](https://img.shields.io/badge/License-MIT-f0a470.svg) ![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js) ![React](https://img.shields.io/badge/React-19-149eca?logo=react) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript) ![MCP](https://img.shields.io/badge/MCP-server-8a5cf6)
+**A local-first visual workbench and headless CMS for your UI. Catalog the real code of components from multiple sources into a local database, define a brand blueprint once, and hand both to your AI over MCP so it builds with your identity — offline, resilient, and deterministic.**
 
-Gestor **local y offline** de componentes UI de múltiples fuentes. Descarga el
-**código real** de cada componente a una base SQLite propia, lo muestra en una
-web con búsqueda y vista previa, y lo expone a la IA mediante un **servidor MCP**.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![SQLite](https://img.shields.io/badge/SQLite-FTS5-003b57?logo=sqlite&logoColor=white)](https://www.sqlite.org)
+[![MCP](https://img.shields.io/badge/MCP-Server-8a5cf6?logo=anthropic&logoColor=white)](https://modelcontextprotocol.io)
+[![CI](https://github.com/IvanjonasFC/Golden-Path-Studio/actions/workflows/ci.yml/badge.svg)](https://github.com/IvanjonasFC/Golden-Path-Studio/actions/workflows/ci.yml)
 
-> El objetivo: no depender de webs externas. Si mañana cierra Uiverse, Magic UI o
-> Aceternity, tú ya tienes todo su código clonado en tu máquina.
-
-Fuentes incluidas de serie:
-
-| Fuente | Qué trae | Plataforma | Licencia |
-|---|---|---|---|
-| **Uiverse.io** | ~3.800 elementos CSS/Tailwind (botones, cards, loaders...) | web | MIT |
-| **HyperUI** | ~560 snippets Tailwind (app, marketing, ecommerce...) | web | MIT |
-| **ThreeUI** | ~43 componentes Three.js/React (fondos 3D, shaders, landing 3D) | react | MIT |
-| **Magic UI** | ~75 componentes React/Tailwind/Motion | react | MIT |
-| **Aceternity UI** | ~115 componentes y bloques React | react | MIT (free) / Pro |
-| **shadcn/ui** | ~47 primitivos base React/Tailwind | react | MIT |
-| **Cult UI** | ~60 componentes React animados | react | MIT |
-| **Kokonut UI** | ~60 componentes React modernos | react | MIT |
-
-La BD precargada del zip trae ya **Uiverse + HyperUI + ThreeUI** (las 3 que se pueden
-descargar de GitHub). Las otras cinco (**Magic UI, Aceternity, shadcn/ui, Cult UI,
-Kokonut**) se añaden con `npm run ingest:remote` desde tu red.
-
-## Colecciones / perfiles (Stack · Marca · Proyecto)
-
-En **/colecciones** creas perfiles y les añades componentes (botón “＋ Colección” en
-cada card del catálogo). Tres tipos: **Stack** (tu set habitual), **Marca** (con design
-tokens: fondo, acento, fuentes, radio…) y **Proyecto**. Para cada colección puedes:
-
-- **Copiar prompt IA**: genera un prompt markdown que instruye a la IA a construir usando
-  EXCLUSIVAMENTE esos componentes (y tu marca), con dependencias e instrucciones MCP.
-- **Exportar a proyecto**: escribe a disco (`./exports/<slug>/`) el código de todos los
-  componentes organizado por fuente, más `components.json`, `INSTALL.md`, `AI_PROMPT.md`
-  y `brand.tokens.json`.
-- La IA también puede leer las colecciones por MCP (`list_collections`, `get_collection`,
-  `get_collection_prompt`).
-
-## Modo offline 100%
-
-`npm run offline` descarga los thumbnails remotos (ThreeUI) a `public/thumbnails/`,
-vendoriza Tailwind en `public/vendor/tailwind.js` y reescribe la BD a rutas locales, para
-que ni los previews ni las imágenes dependan de CDNs externos. (Ejecútalo una vez, con red.)
-
-**Estética:** la web usa la marca de tu portfolio (fondo `#050505`, acento naranja
-`#F0A470`, tipografías Space Grotesk + Inter, glass, grano y glow radial) para
-mantener coherencia entre tus proyectos.
+</div>
 
 ---
 
-## 1. Requisitos
+> [!IMPORTANT]
+> **Local and offline by design.** The catalog, design system tokens, collections, and CMS entities live in a fast local SQLite database. Nothing is tracked or sent to external servers; your AI (Claude Desktop, Cursor, Antigravity) interfaces with your codebase locally through the open **Model Context Protocol (MCP)** standard.
 
-- **Node.js 20 o superior** (recomendado 22). Comprueba con `node -v`.
-- **git** en el PATH (para clonar el repo de Uiverse).
-- Windows, macOS o Linux.
+## What is Golden Path Studio
 
-## 2. Puesta en marcha (rápida)
+Building modern web applications with AI coding assistants suffers from three critical bottlenecks:
+
+1. **Ephemeral Registries & UI Fragmentation**: Modern UI components (shadcn/ui, Magic UI, Aceternity, HyperUI, Uiverse) are scattered across dozens of websites. If an author removes a repo or a registry changes its schema, your components break.
+2. **The "Generic AI" Look**: Asking an AI to build from scratch results in repetitive, bland aesthetics lacking cohesive brand tokens, proper spacing, typography, and motion curves.
+3. **Lack of AST-Level Verification**: AI tools hallucinate layout slots, mix incompatible design primitives, or ignore accessibility standards (WCAG AAA).
+
+**Golden Path Studio** solves all three by providing an integrated, local-first environment:
+
+* **Archive & Catalog**: An automated ingester archives the *real code* of components directly into a local SQLite database with **FTS5 full-text search**. Even if the original site disappears, your components remain accessible forever.
+* **Brand Blueprint Engine**: Define tokens (colors, fonts, radii, motion, density) and high-level architectural decisions once. `resolveBlueprint()` merges presets, templates, and customizations into a single canonical source of truth.
+* **Headless CMS & Dynamic Routing**: Manage structured project entities and portfolio pages (`/proyectos/[slug]`) via dynamic route resolution, with click introspection and live canvas editing.
+* **Verification Runtime & Determinism**: Verifies slot cardinality, flags semantic mismatches, and embeds a **canonical document SHA-256 manifest hash** directly into exported code (Next.js, Astro, Pure HTML).
+* **AI Bridge via MCP**: A dedicated **Model Context Protocol (MCP)** server exposes your entire catalog, brand tokens, and collections to Claude Desktop, Cursor, or Antigravity via stdio.
+
+---
+
+## Features
+
+| Area | Route | What it does |
+|------|-------|--------------|
+| **Catalog & Archive** | `/` | Browse, search, and preview real component code with per-source attribution |
+| **Full-Text Search** | `/` | Ultra-fast SQLite **FTS5** over name, tags, and description with faceted filters |
+| **Brand Editor** | `/marcas/[id]` | Visual design-token workbench, live canvas preview, and slot layout assembler |
+| **Project CMS** | `/proyectos/[slug]` | Headless entity-template engine with dynamic subpages and live introspection |
+| **Asset Manager** | Modal / Portal | Centered viewport modal with 2D focal point canvas, crop preview, and WCAG ALT check |
+| **Accessibility Auditor** | `/marcas/[id]` | Live WCAG 2.1 AA/AAA contrast analyzer with automated actionable suggestions |
+| **Verification Runtime** | CLI / Lib | Deterministic SHA-256 document hashing, cardinality enforcement, and diagnostics |
+| **Collections & Profiles**| `/colecciones` | Group components into Stack, Brand, or Project profiles with prompt generators |
+| **Prompt Studio** | `/prompts` | High-converting design prompts, curated gradients, and interactive showcase |
+| **shadcn/ui Registry** | `/r/[slug]` | Export any component or profile as a valid shadcn CLI registry endpoint |
+| **MCP Server** | Stdio | 8 granular tools for LLM agent pair programming |
+
+---
+
+## Architecture
+
+```mermaid
+graph TD
+    subgraph INGESTION ["Ingestion Engine (src/ingest/)"]
+        SRC["Remote Registries & Local Repos<br/>(shadcn, MagicUI, Aceternity, Uiverse)"] -->|"Pluggable Adapters"| ING["Ingest Pipeline & AST Parser"]
+        ING -->|"Atomic Transactions"| DB[("SQLite + FTS5 Index<br/>(data/catalog.db)")]
+    end
+
+    subgraph ENGINE ["Brand Blueprint & CMS (src/lib/)"]
+        DB --> BRAND["Brand Engine (tokens.ts, blueprint.ts)"]
+        BRAND -->|"resolveBlueprint()"| RESOLVED["Canonical ResolvedConfig"]
+        RESOLVED --> ASSEMBLE["Scene Assembler & Layout Solver"]
+        ASSEMBLE --> CMS["Project CMS Resolver (slug router)"]
+    end
+
+    subgraph VERIFICATION ["Deterministic Verification Runtime"]
+        ASSEMBLE --> VERIFY["Verification Runtime & Validator"]
+        VERIFY -->|"Single Slot Cardinality"| CHK1["Cardinality Guards"]
+        VERIFY -->|"Semantic Checking"| CHK2["Slot Incompatibility Diagnostics"]
+        VERIFY -->|"SHA-256 Hashing"| HASH["DocumentManifest Canonical Hash"]
+    end
+
+    subgraph RUNTIME ["Interactive Workbench & Exporters"]
+        CMS --> CANVAS["Brand Editor Canvas & Click Introspection"]
+        CANVAS --> WCAG["Live WCAG AAA Contrast Auditor"]
+        CANVAS --> ASSETS["Asset Manager & Focal Point Portal"]
+        HASH --> EXP["Code Exporters (Next.js, Astro, HTML)"]
+    end
+
+    subgraph AI ["AI Integration (Model Context Protocol)"]
+        DB & BRAND & CMS --> MCP["MCP Server (mcp/server.ts)"]
+        MCP --> CLIENTS["Claude Desktop · Cursor · Antigravity IDE"]
+    end
+```
+
+---
+
+## Tech Stack
+
+* **Core Framework**: Next.js 15 (App Router), React 19, TypeScript 5.
+* **Styling**: Tailwind CSS 4, CSS Custom Properties Design Tokens, Zero-Emoji SVG Iconography.
+* **Database & Persistence**: SQLite via `better-sqlite3`, Drizzle ORM, SQLite FTS5 Full-Text Virtual Tables.
+* **Verification & Cryptography**: Deterministic SHA-256 canonical hashing via Node `crypto`, slot cardinality solver.
+* **AI Integration**: `@modelcontextprotocol/sdk` (Stdio Transport).
+* **Testing & Quality Assurance**: Custom automated verification test suites (`test-cms-pipeline.ts`, `test-verification-runtime.ts`).
+
+<details>
+<summary>Core Architecture Modules (<code>src/lib/</code>)</summary>
+
+| Module | Responsibility |
+|--------|----------------|
+| `componentContract.ts` | Type definitions and normalizers for core primitives (Hero, Navbar, Metrics, Bento, Contact, Footer) |
+| `projectDocument.ts` | Verification runtime, single-slot cardinality enforcement, semantic mismatch diagnostics, and SHA-256 document manifest generator |
+| `projectCollectionResolver.ts` | Canonical project resolver, publication policy (drafts vs published), and dynamic route matching (`/proyectos/:slug`) |
+| `portfolioProjects.ts` | Structured project CMS entity definitions, sanitizers, and universal ProjectDetailTemplate |
+| `sceneAssembler.ts` | Full-page assembly pipeline with runtime mode guards and AST composition |
+| `scenes.ts` | Slot topology definitions, conflict resolution options, and layout mutations |
+| `tokens.ts` | Design token compilation, contrast calculation, and CSS token generation |
+| `blueprint.ts` | Hierarchical blueprint resolution (`resolveBlueprint`), origin tracking, and golden paths |
+| `brandExport.ts` | Next.js, Astro, and pure HTML/Tailwind export generators embedding DocumentManifests |
+| `contrast.ts` | WCAG 2.1 contrast ratio calculator, APCA compliance, and suggestion generators |
+
+</details>
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+* **Node.js 20+** (v22 recommended) — verify with `node -v`
+* **npm** or **pnpm**
+* **git** on your `PATH`
+
+### Installation & Local Setup
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/IvanjonasFC/Golden-Path-Studio.git
+cd Golden-Path-Studio
+
+# 2. Install dependencies
 npm install
+
+# 3. Configure environment
+cp .env.example .env
+
+# 4. Seed the database with canonical portfolio brand & projects
+npm run db:seed
+
+# 5. Launch development server
 npm run dev
 ```
 
-Abre **http://localhost:3000**. La base ya viene precargada con Uiverse
-(`data/catalog.db`), así que verás componentes desde el primer momento.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 3. Poblar / actualizar el catálogo
+### Ingestion Pipeline (Populating the Component Vault)
+
+The database is populated through pluggable, idempotent adapters:
 
 ```bash
-npm run ingest            # todas las fuentes
-npm run ingest:local      # Uiverse + HyperUI + ThreeUI (desde GitHub)
-npm run ingest:remote     # Magic UI + Aceternity (sus dominios)
-npm run ingest:threeui    # una sola fuente (ejemplo)
-npm run stats             # ver recuentos por fuente/categoría/framework
+npm run ingest            # Ingest all sources (local + remote)
+npm run ingest:local      # Ingest GitHub repositories (HyperUI, Uiverse, ThreeUI)
+npm run ingest:remote     # Ingest registries (Magic UI, Aceternity, shadcn/ui, Cult)
+npm run stats             # View facet counts by source, category, and framework
 ```
 
-La ingesta es **idempotente**: cada fuente se borra y se reinserta, así que
-puedes relanzarla cuando quieras para actualizar. Vuelve a ejecutarla, por
-ejemplo, una vez al mes para tener los componentes nuevos.
+---
 
-> **Nota de red:** Magic UI y Aceternity se descargan de `magicui.design` y
-> `ui.aceternity.com`. Si tu red bloquea esos dominios, ejecuta `ingest:remote`
-> desde una red que los permita. Uiverse se clona de GitHub.
+## Model Context Protocol (MCP) Setup
 
-## 4. Conectar la IA (servidor MCP)
+Golden Path Studio exposes an official **Model Context Protocol (MCP)** server over stdio. This enables AI tools (Claude Desktop, Cursor, Antigravity) to query your local components and build UIs matching your exact brand blueprint.
 
-El servidor MCP expone tu catálogo a Claude (Desktop, Code o Cowork) con:
-`search_components`, `get_component`, `list_catalog_facets`, `list_collections`,
-`get_collection` y `get_collection_prompt`.
+### Available MCP Tools
 
-Añade esto a la configuración MCP de tu cliente (ajusta la ruta absoluta):
+| Tool | Parameters | Description |
+|------|------------|-------------|
+| `search_components` | `query`, `category`, `source`, `framework`, `limit` | Searches the SQLite catalog via FTS5 and returns metadata with installation guides |
+| `get_component` | `id` | Retrieves the full raw source code of a component, ready to paste |
+| `list_catalog_facets` | *None* | Returns counts of available categories, sources, and platforms |
+| `list_collections` | *None* | Lists all user collections and design profiles |
+| `get_collection` | `id` | Retrieves all components in a collection along with their full code |
+| `get_collection_prompt` | `id` | Generates a senior AI prompt instructed to use that exact stack and brand |
+| `list_brands` | *None* | Lists all brand blueprints and compiled token registries |
+| `get_brand` | `id` | Returns the complete compiled design tokens, effects, and slot configurations |
+
+### Client Configuration
+
+Add this configuration to your MCP settings file (e.g. `claude_desktop_config.json` or Antigravity `mcp_config.json`):
 
 ```json
 {
   "mcpServers": {
-    "component-vault": {
+    "golden-path-studio": {
       "command": "npx",
-      "args": ["tsx", "C:\\Users\\IvN\\Desktop\\Componentes\\component-vault\\mcp\\server.ts"],
+      "args": ["tsx", "/absolute/path/to/Golden-Path-Studio/mcp/server.ts"],
       "env": {
-        "DB_PATH": "C:\\Users\\IvN\\Desktop\\Componentes\\component-vault\\data\\catalog.db"
+        "DB_PATH": "/absolute/path/to/Golden-Path-Studio/data/catalog.db"
       }
     }
   }
 }
 ```
 
-Tienes una plantilla en `claude_mcp_config.example.json`.
+---
 
-Una vez conectado, podrás pedirle a la IA cosas como *"busca en mi vault un botón
-neón y un card 3D y úsalos en esta pantalla"*: la IA llamará a `search_components`,
-elegirá, y traerá el código con `get_component`.
+## Verification & Determinism Model
 
-## 5. Arquitectura
+Every design in Golden Path Studio is governed by the **Verification Runtime**:
 
+1. **Single Slot Cardinality**: Enforces that unique slots (such as Navbar or Main Hero) cannot have duplicate components without explicit conflict resolution.
+2. **Semantic Mismatch Diagnostics**: Detects when a component type doesn't match its target scene (e.g. stats counter in a blog post) and offers one-click automated adaptation.
+3. **Canonical Document Manifest**: Generates a deterministic SHA-256 hash representing the exact configuration, components, tokens, and revision number. This manifest is embedded into exports so any downstream tool can verify document integrity.
+4. **Strict Zero-Emoji Policy**: Enforces clean, modern SVG vector iconography across all components for enterprise-grade visuals.
+
+### Running Verification Tests
+
+```bash
+# Test the dynamic CMS entity and route resolver pipeline
+npm run test:cms
+
+# Test the Verification Runtime, cardinality guards, and document hashing
+npm run test:verification
 ```
-src/
-  db/         esquema + cliente SQLite (better-sqlite3) + índice FTS5
-  lib/        query.ts (búsqueda/filtros reutilizada por web y MCP) + tipos
-  ingest/     un adaptador por fuente + orquestador CLI
-  app/        Next.js (catálogo, detalle, API REST)
-  components/ UI de la web (React client components)
-mcp/          servidor MCP (stdio)
-data/         catalog.db (la base; portable entre sistemas operativos)
+
+---
+
+## Project Structure
+
+```text
+Golden-Path-Studio/
+├── data/                                 # Catalogs, mockups, and prompts data
+├── mcp/
+│   └── server.ts                         # Stdio MCP Server (8 tools)
+├── public/
+│   ├── assets/                           # Asset library & media
+│   ├── thumbnails/                       # Component preview thumbnails
+│   └── vendor/                           # Vendored offline libraries (Three.js, Babel, Framer)
+├── scripts/
+│   ├── seed-portfolio-brand.ts           # Canonical portfolio brand seeder (10 CMS projects)
+│   ├── sync-portfolio-db.ts              # SQLite database sync & normalization script
+│   ├── test-cms-pipeline.ts              # 8-point CMS pipeline & route verification suite
+│   ├── test-verification-runtime.ts      # Cardinality, AST hashing, & conflict resolution tests
+│   └── scan-repo.ts                      # Repository scanner and ingester
+├── src/
+│   ├── app/                              # Next.js 15 App Router
+│   │   ├── api/                          # REST API (brands, collections, components, exports)
+│   │   ├── colecciones/                  # Collections and stack profile views
+│   │   ├── marcas/                       # Brand Studio and visual canvas editor
+│   │   ├── perfil/                       # User profile and settings
+│   │   ├── prompts/                      # Prompt Studio & showcase
+│   │   └── r/                            # Dynamic shadcn/ui registry endpoints
+│   ├── components/
+│   │   ├── AssetPickerModal.tsx          # Centered viewport React Portal for asset management
+│   │   ├── BlockInspector.tsx            # Universal inspector with capability auto-discovery
+│   │   ├── BrandEditor.tsx               # Visual canvas editor with click introspection
+│   │   ├── CatalogClient.tsx             # FTS5 search catalog explorer
+│   │   └── WcagLiveAuditor.tsx           # Live WCAG AAA contrast analyzer
+│   ├── db/
+│   │   └── index.ts                      # SQLite client & Drizzle ORM schema
+│   ├── ingest/                           # Pluggable ingesters (shadcn, Uiverse, MagicUI)
+│   └── lib/
+│       ├── componentContract.ts          # Core component interfaces & prop normalizers
+│       ├── portfolioProjects.ts          # CMS entity schemas & ProjectDetailTemplate
+│       ├── projectCollectionResolver.ts  # Dynamic route resolver & publication policy
+│       ├── projectDocument.ts            # Verification runtime & SHA-256 document hashing
+│       └── tokens.ts                     # Design token compiler & color matrix solver
+├── .env.example
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── LICENSE                               # MIT License
+└── package.json
 ```
 
-**Esquema unificado** (tabla `components`): una fila = un componente, con su
-`source`, `platform`, `framework`, `category`, `tags`, `dependencies`,
-`installCommand` y — lo importante — `files` (el **código completo** en JSON).
-Búsqueda por texto con **FTS5**.
+---
 
-## 6. Añadir una fuente nueva (u otro stack)
+## License
 
-El sistema es de **adaptadores enchufables**. Para añadir una web o un stack
-(Android/Jetpack Compose, Flutter, React Native...):
-
-1. Crea `src/ingest/mi-fuente.ts` que exporte un `SourceAdapter`
-   (ver `src/ingest/util.ts` para el contrato). Devuelve una lista de
-   `IngestItem` con `platform` y `framework` correctos.
-2. Regístralo en el mapa `ADAPTERS` de `src/ingest/index.ts`.
-3. `npm run ingest -- --source mi-fuente`.
-
-No hay que tocar ni la web ni el MCP: leen la misma tabla. Si otra fuente también
-usa el **registro shadcn**, reutiliza `makeShadcnAdapter` (como Magic UI y
-Aceternity) — es una sola línea de config.
-
-Ideas de fuentes para otros stacks (candidatas a futuros adaptadores):
-- **React/Tailwind:** shadcn/ui, HyperUI, Cult UI, Kokonut UI, Skiper UI (todas registros shadcn o repos MIT).
-- **Flutter:** pub.dev widgets, FlutterGems.
-- **Android (Jetpack Compose):** repos de componentes Compose en GitHub.
-- **CSS puro:** CSS-Tricks snippets, animvariados.
-
-## 7. Licencias y atribución
-
-Cada componente guarda su `license` y `author`. Uiverse y Magic UI son MIT;
-Aceternity es MIT en sus componentes gratuitos (los "Pro" requieren licencia y su
-ingesta se omite automáticamente si el endpoint no responde). Al publicar
-proyectos, respeta la atribución que pida cada fuente.
-
-## 8. Scripts
-
-| Script | Qué hace |
-|---|---|
-| `npm run dev` | Web en modo desarrollo |
-| `npm run build` / `npm start` | Build y servidor de producción |
-| `npm run ingest[:*]` | Ingesta de fuentes |
-| `npm run mcp` | Arranca el servidor MCP (para probarlo a mano) |
-| `npm run stats` | Estadísticas de la base |
+Distributed under the [MIT](LICENSE) license. All bundled component code preserves original author attributions as documented in [NOTICE](NOTICE).

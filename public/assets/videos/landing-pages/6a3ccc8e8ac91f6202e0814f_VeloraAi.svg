@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <defs>
+          <radialGradient id="veloraGlow" cx="50%" cy="65%" r="60%">
+            <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#07080c" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="#07080c"/>
+        <rect width="100%" height="100%" fill="url(#veloraGlow)"/>
+
+        <!-- Navbar -->
+        <rect x="0" y="0" width="800" height="50" fill="rgba(0,0,0,0.4)"/>
+        <line x1="0" y1="50" x2="800" y2="50" stroke="rgba(255,255,255,0.08)"/>
+        <text x="40" y="31" fill="#f59e0b" font-size="14" font-weight="900" letter-spacing="2">VELORA LUXURY</text>
+        <rect x="710" y="13" width="60" height="24" rx="12" fill="#f59e0b"/>
+        <text x="740" y="29" text-anchor="middle" fill="#000000" font-size="9" font-weight="800">RESERVE</text>
+
+        <!-- Headline -->
+        <text x="400" y="125" text-anchor="middle" fill="rgba(245,158,11,0.9)" font-size="10" font-weight="800" letter-spacing="3">EXOTIC FLEET ATELIER</text>
+        <text x="400" y="165" text-anchor="middle" fill="#ffffff" font-size="34" font-weight="900">DRIVE THE EXTRAORDINARY</text>
+        <text x="400" y="195" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-size="13">Production grade interface specification...</text>
+
+        <!-- Sports Car Stylized Silhouette -->
+        <path d="M 180 320 Q 240 280 340 270 Q 460 265 560 285 Q 640 305 660 325 L 670 340 L 160 340 Z" fill="#11131a" stroke="#f59e0b" stroke-width="1.5" opacity="0.85"/>
+        <circle cx="250" cy="340" r="28" fill="#07080c" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="250" cy="340" r="14" fill="#1a1d26"/>
+        <circle cx="580" cy="340" r="28" fill="#07080c" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="580" cy="340" r="14" fill="#1a1d26"/>
+
+        <!-- Specs Telemetry Bar -->
+        <rect x="150" y="385" width="500" height="54" rx="10" fill="rgba(20,24,36,0.8)" stroke="rgba(245,158,11,0.3)"/>
+        <text x="180" y="408" fill="rgba(255,255,255,0.5)" font-size="9" font-weight="700">ENGINE</text>
+        <text x="180" y="426" fill="#ffffff" font-size="13" font-weight="800">V10 TWIN-TURBO</text>
+        <line x1="310" y1="395" x2="310" y2="430" stroke="rgba(255,255,255,0.1)"/>
+
+        <text x="340" y="408" fill="rgba(255,255,255,0.5)" font-size="9" font-weight="700">0 - 100 KM/H</text>
+        <text x="340" y="426" fill="#f59e0b" font-size="13" font-weight="800">2.9 SECONDS</text>
+        <line x1="470" y1="395" x2="470" y2="430" stroke="rgba(255,255,255,0.1)"/>
+
+        <text x="500" y="408" fill="rgba(255,255,255,0.5)" font-size="9" font-weight="700">TOP SPEED</text>
+        <text x="500" y="426" fill="#ffffff" font-size="13" font-weight="800">340 KM/H</text>
+      </svg>

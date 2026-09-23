@@ -1,9 +1,9 @@
-# Código de conducta
+# Code of Conduct
 
-Este proyecto adopta el [Contributor Covenant](https://www.contributor-covenant.org/es/version/2/1/code_of_conduct/) v2.1.
+This project adopts the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) v2.1.
 
-Nos comprometemos a mantener un entorno acogedor y respetuoso. No se tolera el acoso
-ni la discriminación. Los mantenedores pueden retirar, editar o rechazar contribuciones
-que no cumplan estas normas.
+We are committed to a welcoming and respectful environment. Harassment and
+discrimination are not tolerated. Maintainers may remove, edit or reject
+contributions that do not follow these standards.
 
-Para reportar conductas inapropiadas: **ivanjonasfc@gmail.com**.
+To report unacceptable behavior: **ivanjonasfc@gmail.com**.

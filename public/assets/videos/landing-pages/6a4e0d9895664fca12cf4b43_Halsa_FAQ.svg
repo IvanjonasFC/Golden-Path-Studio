@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#090d16"/>
+        <text x="400" y="55" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="800" letter-spacing="2">FREQUENTLY ASKED QUESTIONS</text>
+        <text x="400" y="90" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="900">Halsa FAQ</text>
+
+        <!-- Accordion 1 (Expanded) -->
+        <rect x="80" y="125" width="640" height="96" rx="8" fill="#121829" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="110" y="155" fill="#ffffff" font-size="14" font-weight="700">How do I paste these prompts into Cursor, Claude or v0?</text>
+        <text x="680" y="155" text-anchor="end" fill="#38bdf8" font-size="16" font-weight="700">-</text>
+        <text x="110" y="180" fill="rgba(255,255,255,0.7)" font-size="12">Click "Copiar Prompt" on any card and paste it directly into Cursor (Ctrl+L) or Claude 3.5 Sonnet.</text>
+        <text x="110" y="200" fill="rgba(255,255,255,0.7)" font-size="12">The prompt contains full container, layout, color tokens, and state requirements.</text>
+
+        <!-- Accordion 2 -->
+        <rect x="80" y="235" width="640" height="52" rx="8" fill="#0e1320" stroke="rgba(255,255,255,0.08)"/>
+        <text x="110" y="266" fill="#e2e8f0" font-size="14" font-weight="600">Can I customize the primary brand colors before copying?</text>
+        <text x="680" y="266" text-anchor="end" fill="#64748b" font-size="16" font-weight="700">+</text>
+
+        <!-- Accordion 3 -->
+        <rect x="80" y="300" width="640" height="52" rx="8" fill="#0e1320" stroke="rgba(255,255,255,0.08)"/>
+        <text x="110" y="331" fill="#e2e8f0" font-size="14" font-weight="600">Are the generated components compatible with Tailwind v4?</text>
+        <text x="680" y="331" text-anchor="end" fill="#64748b" font-size="16" font-weight="700">+</text>
+
+        <!-- Accordion 4 -->
+        <rect x="80" y="365" width="640" height="52" rx="8" fill="#0e1320" stroke="rgba(255,255,255,0.08)"/>
+        <text x="110" y="396" fill="#e2e8f0" font-size="14" font-weight="600">Where can I view the 4,913 actual code components?</text>
+        <text x="680" y="396" text-anchor="end" fill="#64748b" font-size="16" font-weight="700">+</text>
+      </svg>

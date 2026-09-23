@@ -10,7 +10,7 @@
    más profunda (componentes, rutas, escenas, docs pack) son fases siguientes.
    ============================================================================ */
 import { defaultBrandTokens, setTokenValue, type TokenGroup } from "./tokens";
-import type { Blueprint, LibItem, ProjectView } from "./blueprint";
+import type { Blueprint, LibItem, ProjectView, ProjectSignal, TreeNode } from "./blueprint";
 import type { SceneId } from "./scenes";
 
 export interface ImportFile { name: string; text: string }
@@ -134,35 +134,76 @@ function collectRadii(text: string): string[] {
   return out.sort((a, b) => parseFloat(a) - parseFloat(b));
 }
 
-/* ---------------------------- library detection ---------------------------- */
-const LIB_MAP: Record<string, { category: string; status: LibItem["status"] }> = {
-  "react-hook-form": { category: "forms", status: "approved" },
-  zod: { category: "validation", status: "approved" },
-  valibot: { category: "validation", status: "approved" },
-  "@tanstack/react-query": { category: "data-fetching", status: "approved" },
-  "@tanstack/react-table": { category: "data", status: "approved" },
-  zustand: { category: "state", status: "approved" },
-  jotai: { category: "state", status: "approved" },
-  "date-fns": { category: "utils", status: "approved" },
-  clsx: { category: "utils", status: "approved" },
-  "tailwind-merge": { category: "utils", status: "approved" },
-  "framer-motion": { category: "ui", status: "approved" },
-  motion: { category: "ui", status: "approved" },
-  lodash: { category: "utils", status: "discouraged" },
-  moment: { category: "utils", status: "blocked" },
-  axios: { category: "data-fetching", status: "discouraged" },
-};
-function detectLibraries(pkgText: string): LibItem[] {
-  try {
-    const pkg = JSON.parse(pkgText) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
-    const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
-    const out: LibItem[] = [];
-    for (const name of Object.keys(deps)) {
-      const hit = LIB_MAP[name];
-      if (hit) out.push({ name, category: hit.category, status: hit.status });
+/* ---------------------------- library detection ----------------------------
+   Clasificador de dependencias → CATEGORÍA de export + POLÍTICA. Objetivo: que
+   `libraries.json` del pack diga de verdad el STACK del proyecto (framework, UI,
+   build, styling, data, desktop/nativo, runtime…), no solo un puñado de libs
+   conocidas. Reglas ordenadas (la primera que casa gana). Cubre el ecosistema
+   JS/TS y el nativo/Python del corpus (Tauri, requirements.txt). Regla general,
+   no hardcode por proyecto. */
+type LibCategory =
+  | "framework" | "ui" | "motion" | "routing" | "styling" | "build" | "data"
+  | "data-fetching" | "state" | "forms" | "validation" | "testing" | "desktop"
+  | "native" | "runtime" | "utils" | "other";
+const DEP_RULES: { re: RegExp; category: LibCategory }[] = [
+  { re: /^(react|react-dom|next|astro|vue|svelte|@sveltejs\/|solid-js|preact|nuxt|@angular\/|qwik|@builder\.io\/qwik|remix|@remix-run\/|gatsby|expo)$/i, category: "framework" },
+  { re: /^(@tauri-apps\/|electron$|electron-builder|@neutralinojs)/i, category: "desktop" },
+  { re: /^(@capacitor\/|cordova|@ionic\/)/i, category: "native" },
+  { re: /^(recharts|chart\.js|chartjs|@nivo\/|visx|@visx\/|apexcharts|d3)$/i, category: "data" },
+  { re: /^(framer-motion|motion|@react-spring\/|gsap|@formkit\/auto-animate|@motionone\/)/i, category: "motion" },
+  { re: /^(@radix-ui\/|@headlessui\/|@mui\/|@chakra-ui\/|lucide(-react)?|@heroicons\/|sonner|vaul|cmdk|embla-carousel|react-icons|@nextui-org\/|@mantine\/|daisyui)/i, category: "ui" },
+  { re: /^(tailwindcss|@tailwindcss\/|postcss|autoprefixer|sass|less|@fontsource(-variable)?\/|styled-components|@emotion\/|@stitches\/|unocss|clsx|tailwind-merge|class-variance-authority|cva)/i, category: "styling" },
+  { re: /^(react-router|react-router-dom|@tanstack\/react-router|wouter|@reach\/router)$/i, category: "routing" },
+  { re: /^(@tanstack\/react-query|swr|@apollo\/|urql|@trpc\/|ky|graphql-request)/i, category: "data-fetching" },
+  { re: /^(@tanstack\/react-table|drizzle-orm|@prisma\/|prisma|mongoose|sequelize|kysely|typeorm|better-sqlite3|@supabase\/|firebase)/i, category: "data" },
+  { re: /^(zustand|jotai|redux|@reduxjs\/|recoil|valtio|mobx|xstate)$/i, category: "state" },
+  { re: /^(react-hook-form|formik|@hookform\/|final-form)/i, category: "forms" },
+  { re: /^(zod|valibot|yup|superstruct|joi|ajv)$/i, category: "validation" },
+  { re: /^(vite|@vitejs\/|webpack|rollup|esbuild|turbo|tsup|parcel|@swc\/|swc|tsx|typescript)$/i, category: "build" },
+  { re: /^(vitest|jest|@testing-library\/|playwright|@playwright\/|cypress|mocha|chai)/i, category: "testing" },
+  // Python / runtime nativo (requirements.txt).
+  { re: /^(requests|httpx|aiohttp|urllib3)$/i, category: "data-fetching" },
+  { re: /^(sqlalchemy|psycopg2?(-binary)?|asyncpg|aiosqlite|alembic|pymongo|redis|databases)$/i, category: "data" },
+  { re: /^(fastapi|flask|django|uvicorn|gunicorn|starlette)$/i, category: "framework" },
+  { re: /^(numpy|pandas|scipy|torch|tensorflow|transformers|faster-whisper|openai-whisper|whisper|ffsubsync|pydub|pyinstaller)$/i, category: "runtime" },
+  { re: /^(openai|anthropic|ollama|langchain)/i, category: "data-fetching" },
+  { re: /^(date-fns|dayjs|luxon|ramda|nanoid|uuid|immer)$/i, category: "utils" },
+];
+const DEP_STATUS: { re: RegExp; status: LibItem["status"] }[] = [
+  { re: /^moment$/i, status: "blocked" },
+  { re: /^(lodash|axios|request)$/i, status: "discouraged" },
+];
+function classifyDep(name: string): { category: string; status: LibItem["status"] } {
+  return {
+    category: DEP_RULES.find((r) => r.re.test(name))?.category ?? "other",
+    status: DEP_STATUS.find((r) => r.re.test(name))?.status ?? "approved",
+  };
+}
+/** Detecta el STACK real del proyecto: package.json (deps+devDeps) y
+ *  requirements.txt (Python). Devuelve LibItem[] deduplicado y clasificado. */
+function detectStack(files: ImportFile[]): LibItem[] {
+  const out = new Map<string, LibItem>();
+  const add = (raw: string) => {
+    const name = raw.trim();
+    if (!name || out.has(name)) return;
+    const { category, status } = classifyDep(name);
+    out.set(name, { name, category, status });
+  };
+  // TODOS los package.json (raíz + workspaces de un monorepo), no solo el primero.
+  for (const pkgFile of files.filter((f) => /(^|\/)package\.json$/i.test(f.name))) {
+    try {
+      const j = JSON.parse(pkgFile.text) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+      for (const nm of Object.keys({ ...(j.dependencies ?? {}), ...(j.devDependencies ?? {}) })) add(nm);
+    } catch { /* package.json ilegible */ }
+  }
+  for (const r of files.filter((f) => /(^|\/)requirements[\w.-]*\.txt$/i.test(f.name))) {
+    for (const line of r.text.split(/\r?\n/)) {
+      if (/^\s*#/.test(line) || line.includes("://")) continue;
+      const m = line.match(/^\s*([A-Za-z0-9][A-Za-z0-9._-]*)/);
+      if (m) add(m[1]);
     }
-    return out;
-  } catch { return []; }
+  }
+  return [...out.values()];
 }
 function detectName(files: ImportFile[]): string | null {
   const pkg = files.find((f) => /(^|\/)package\.json$/i.test(f.name));
@@ -173,6 +214,125 @@ function detectName(files: ImportFile[]): string | null {
 }
 function prettyName(s: string): string {
   return s.replace(/^@[^/]+\//, "").replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 60);
+}
+
+/* CONTENIDO vs UI (política ARCHITECTURE.md, regla 3): .md/.mdx y src/content/ son
+   CONTENIDO — solo emiten la señal `collections`. Los patrones de UI (table, form,
+   nav, sidebar…) solo se detectan en archivos de UI. */
+const CONTENT_RE = /\.mdx?$/i;
+function isContentFile(name: string): boolean {
+  return CONTENT_RE.test(name) || /(^|\/)src\/content\//i.test(name);
+}
+const UI_FILE_RE = /\.(astro|tsx|jsx|mjs|cjs|js|ts|html|vue|svelte)$/i;
+
+/* CÓDIGO BACKEND (política ARCHITECTURE.md, regla R-E): .py/.rs son código de
+   servidor/sidecar. NO son UI ni rutas navegables. Solo pueden emitir señales del
+   eje Datos (con patrones FUERTES), nunca vistas, secciones, tipo, colores ni
+   tipografías. Se aíslan del escaneo genérico y se analizan aparte. */
+const BACKEND_FILE_RE = /\.(py|rs)$/i;
+function isBackendFile(name: string): boolean { return BACKEND_FILE_RE.test(name); }
+
+/* R-A: un SELECTOR CSS (`.prose-portfolio table {…}`) NO es markup. Antes de buscar
+   CUALQUIER patrón de UI (table/form/nav/sidebar…) se eliminan los bloques
+   `<style>…</style>` (Astro/Vue/Svelte/HTML) y, de forma conservadora, los bloques
+   CSS `{ … }`. Así una regla de estilo para tablas de contenido no crea una tabla
+   de datos, ni una clase `.sidebar`/`.hero` inventa un bloque de layout. */
+function stripStyle(src: string): string {
+  if (!src) return src;
+  // 1) <style ...>...</style> completos (incluye <style is:global>, scoped, lang=…).
+  let out = src.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ");
+  // 2) <template>/JSX aparte: elimina bloques de reglas CSS sueltas `selector { … }`
+  //    solo cuando el cuerpo parece CSS (contiene `:` y `;`), para no tocar JS/JSX.
+  out = out.replace(/\{[^{}]*:[^{}]*;[^{}]*\}/g, " ");
+  return out;
+}
+
+/* ¿El proyecto SIRVE en runtime? (política regla 2). Astro output server/hybrid,
+   Next SSR / route handlers / force-dynamic. Si NO, las rutas [param] se generan en
+   build (getStaticPaths) y NO son dynamic. */
+function detectServerOutput(files: ImportFile[]): boolean {
+  const cfg = files.find((f) => /(^|\/)astro\.config\.[mc]?[jt]s$/i.test(f.name));
+  if (cfg && /\boutput\s*:\s*["'](server|hybrid)["']/i.test(cfg.text)) return true;
+  const names = files.map((f) => f.name).join("\n");
+  if (/(^|\/)(app|src\/app)\/api\//i.test(names) || /(^|\/)pages\/api\//i.test(names)) return true;
+  const code = files.map((f) => f.text).join("\n");
+  if (/export\s+const\s+dynamic\s*=\s*["']force-dynamic["']/.test(code)) return true;
+  if (/getServerSideProps/.test(code)) return true;
+  return false;
+}
+
+/* ESTRUCTURA REAL del proyecto: reconstruye el árbol de carpetas/archivos a partir
+   de las rutas realmente escaneadas (walkRepo ya excluyó node_modules/.git/dist/
+   target/venv/dotfolders). Es el esqueleto HONESTO del proyecto — el que alimenta
+   `project/tree.json` en el export. Acotado para que el editor sea usable. */
+const STRUCT_MAX_CHILDREN = 14;
+const STRUCT_MAX_DEPTH = 6;
+const STRUCT_MAX_NODES = 120;
+export function buildStructureTree(files: ImportFile[]): TreeNode[] {
+  interface Dir { folders: Map<string, Dir>; files: Set<string>; hasPkg: boolean }
+  const mkDir = (): Dir => ({ folders: new Map(), files: new Set(), hasPkg: false });
+  const root = mkDir();
+  for (const f of files) {
+    const parts = f.name.replace(/\\/g, "/").split("/").filter(Boolean);
+    if (!parts.length) continue;
+    let d = root;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const seg = parts[i];
+      if (!d.folders.has(seg)) d.folders.set(seg, mkDir());
+      d = d.folders.get(seg) as Dir;
+    }
+    const file = parts[parts.length - 1];
+    d.files.add(file);
+    if (file === "package.json") d.hasPkg = true;
+  }
+  let nodes = 0;
+  const build = (d: Dir, depth: number): TreeNode[] => {
+    const out: TreeNode[] = [];
+    const folderNames = [...d.folders.keys()].sort((a, b) => a.localeCompare(b));
+    const fileNames = [...d.files].sort((a, b) => a.localeCompare(b));
+    const total = folderNames.length + fileNames.length;
+    let shown = 0;
+    const overflow = () => { out.push({ name: `… (+${total - shown})`, type: "file" }); };
+    for (const name of folderNames) {
+      if (nodes >= STRUCT_MAX_NODES) return out;
+      if (shown >= STRUCT_MAX_CHILDREN) { overflow(); return out; }
+      const sub = d.folders.get(name) as Dir;
+      nodes++; shown++;
+      const type: TreeNode["type"] = sub.hasPkg && depth > 0 ? "package" : "folder";
+      out.push({ name, type, children: depth + 1 < STRUCT_MAX_DEPTH ? build(sub, depth + 1) : [] });
+    }
+    for (const name of fileNames) {
+      if (nodes >= STRUCT_MAX_NODES) return out;
+      if (shown >= STRUCT_MAX_CHILDREN) { overflow(); return out; }
+      nodes++; shown++;
+      out.push({ name, type: "file" });
+    }
+    return out;
+  };
+  return build(root, 0);
+}
+
+/* R-E: análisis de código BACKEND (.py/.rs). Estos archivos NO son UI ni rutas;
+   solo pueden aportar señales del eje DATOS, y SOLO con patrones FUERTES (imports/
+   llamadas reales), nunca por keywords sueltas. Distingue tres orígenes de datos:
+   base de datos, cliente HTTP y puente IPC/sidecar (Tauri/subprocess). */
+export interface BackendData { db: boolean; http: boolean; ipc: boolean; langs: string[]; sources: string[] }
+export function detectBackendData(files: ImportFile[]): BackendData {
+  const langs = new Set<string>();
+  let db = false, http = false, ipc = false;
+  for (const f of files) {
+    if (/\.py$/i.test(f.name)) langs.add("python");
+    if (/\.rs$/i.test(f.name)) langs.add("rust");
+    const t = f.text;
+    if (/\bsqlite3\b|\bpsycopg2?\b|\bsqlalchemy\b|\bsqlx\b|\brusqlite\b|\bdiesel\b|\bsea-orm\b|\bmongoengine\b/i.test(t)) db = true;
+    if (/\brequests\b|\bhttpx\b|\baiohttp\b|\burllib(\.request|3)?\b|\bhttp\.client\b|\breqwest\b/i.test(t)) http = true;
+    if (/#\[tauri::command\]|\binvoke_handler\b|\btauri::command\b|\bsidecar\b|Command::new|\bsubprocess\.|\bPyInstaller\b/i.test(t)) ipc = true;
+  }
+  const sources: string[] = [];
+  if (db) sources.push("db (sqlite/sqlx/…)");
+  if (http) sources.push("http-client (requests/reqwest/…)");
+  if (ipc) sources.push("ipc/sidecar (tauri::command/invoke/subprocess)");
+  return { db, http, ipc, langs: [...langs], sources };
 }
 
 /* --------------------- componentes dominantes (manifiesto) -----------------
@@ -223,33 +383,63 @@ export interface InferResult {
 
 export function inferBlueprint(files: ImportFile[], libraries: LibItem[]): InferResult {
   const notes: string[] = [];
-  const paths = files.map((f) => f.name.toLowerCase());
+  // R-E: los archivos backend (.py/.rs) se apartan del escaneo genérico (tipo,
+  // rutas, UI, colores). Solo alimentan el eje Datos vía detectBackendData().
+  const frontFiles = files.filter((f) => !isBackendFile(f.name));
+  const backendFiles = files.filter((f) => isBackendFile(f.name));
+  const paths = frontFiles.map((f) => f.name.toLowerCase());
   const pathsJoined = paths.join("\n");
-  const code = files.map((f) => f.text).join("\n").toLowerCase();
+  const code = frontFiles.map((f) => f.text).join("\n").toLowerCase();
   const libNames = new Set(libraries.map((l) => l.name.toLowerCase()));
   const hasPath = (re: RegExp) => re.test(pathsJoined);
   const inCode = (re: RegExp) => re.test(code);
   const hasStructure = paths.some((p) => p.includes("/")); // ¿tenemos rutas/carpetas?
+  // Código SOLO de archivos de UI (excluye .md/.mdx, src/content y backend). Los
+  // patrones de UI (table/form/nav/sidebar…) se buscan aquí; el contenido no los
+  // emite (regla 3). R-A: se eliminan los bloques <style>/CSS antes de buscar, para
+  // que un selector CSS (`.prose-portfolio table`) no cuente como markup.
+  const uiCode = frontFiles.filter((f) => UI_FILE_RE.test(f.name) && !isContentFile(f.name)).map((f) => stripStyle(f.text)).join("\n").toLowerCase();
+  const inUi = (re: RegExp) => re.test(uiCode);
 
-  // Señales (cada una: hay evidencia en rutas y/o código y/o deps).
+  // Señales (cada una: hay evidencia en rutas y/o código de UI y/o deps).
   const sig = {
-    landing: hasPath(/\(marketing\)|\/landing|\/pricing|\/(home)\//) || inCode(/hero|pricing|testimonial/),
-    sidebar: hasPath(/\/dashboard(\/|$)|\/admin(\/|$)|\/(app)\//) || inCode(/sidebar|app-?shell/),
-    tabs: hasPath(/\(tabs\)|\/mobile(\/|$)|bottom-?nav/) || inCode(/bottom-?nav|tabbar|tab-?bar/),
+    landing: hasPath(/\(marketing\)|\/landing|\/pricing|\/(home)\//) || inUi(/hero|pricing|testimonial/),
+    sidebar: hasPath(/\/dashboard(\/|$)|\/admin(\/|$)|\/(app)\//) || inUi(/sidebar|app-?shell/),
+    tabs: hasPath(/\(tabs\)|\/mobile(\/|$)|bottom-?nav/) || inUi(/bottom-?nav|tabbar|tab-?bar/),
     auth: hasPath(/\(auth\)|\/login|\/register|\/sign-?in|\/sign-?up|\/auth(\/|$)/) || libNames.has("next-auth") || libNames.has("@clerk/nextjs") || [...libNames].some((n) => /clerk|lucia|supabase|firebase|auth/.test(n)),
-    table: inCode(/data-?grid|datatable|<table|react-table/) || libNames.has("@tanstack/react-table") || hasPath(/\/table/),
-    form: inCode(/<form|useform|react-hook-form/) || libNames.has("react-hook-form") || hasPath(/\/forms?(\/|$)/),
-    charts: [...libNames].some((n) => /recharts|chart\.js|nivo|visx|apexcharts|d3/.test(n)) || inCode(/recharts|chart\.js/),
+    table: inUi(/data-?grid|datatable|<table|react-table/) || libNames.has("@tanstack/react-table") || hasPath(/\/table/),
+    form: inUi(/<form|useform|react-hook-form/) || libNames.has("react-hook-form") || hasPath(/\/forms?(\/|$)/),
+    charts: [...libNames].some((n) => /recharts|chart\.js|nivo|visx|apexcharts|d3/.test(n)) || inUi(/recharts|chart\.js/),
     settings: hasPath(/\/settings(\/|$)|\/ajustes(\/|$)/),
-    modal: inCode(/\bmodal\b|\bdialog\b|\bdrawer\b|\bsheet\b/),
-    cmdk: libNames.has("cmdk") || inCode(/command-?palette|cmdk|⌘k/),
-    monorepo: hasPath(/(^|\n)[^\n]*\/apps\//) && hasPath(/(^|\n)[^\n]*\/packages\//),
-    features: hasPath(/\/features?\//),
-    layers: hasPath(/\/(services|entities|shared)\//),
-    motion: [...libNames].some((n) => /framer-motion|^motion$/.test(n)) || inCode(/framer-motion/),
-    commerce: hasPath(/\/shop(\/|$)|\/store(\/|$)|\/products?(\/|$)|\/checkout(\/|$)|\/cart(\/|$)/) || inCode(/add[ -]?to[ -]?cart|checkout|addtocart/),
-    blog: hasPath(/\/blog(\/|$)|\/posts?(\/|$)|\/articles?(\/|$)/) || inCode(/<article\b/),
-    portfolio: hasPath(/\/projects?(\/|$)|\/proyectos(\/|$)|\/portfolio(\/|$)|\/work(\/|$)/) || inCode(/\bportfolio\b|\bproyectos\b|\bmy work\b/),
+    modal: inUi(/\bmodal\b|\bdialog\b|\bdrawer\b|\bsheet\b/),
+    cmdk: libNames.has("cmdk") || inUi(/command-?palette|cmdk|⌘k/),
+    // Arquitectura por carpeta: cuenta también a NIVEL RAÍZ (apps/, packages/,
+    // features/, services/…), no solo anidadas. `(?:^|[\n/])` cubre inicio de ruta
+    // (las rutas van unidas por \n, sin flag /m) y carpeta anidada.
+    monorepo: hasPath(/(?:^|[\n/])apps\//) && hasPath(/(?:^|[\n/])packages\//),
+    features: hasPath(/(?:^|[\n/])features?\//),
+    layers: hasPath(/(?:^|[\n/])(services|entities|shared)\//),
+    motion: [...libNames].some((n) => /framer-motion|^motion$/.test(n)) || inUi(/framer-motion/),
+    commerce: hasPath(/\/shop(\/|$)|\/store(\/|$)|\/products?(\/|$)|\/checkout(\/|$)|\/cart(\/|$)/) || inUi(/add[ -]?to[ -]?cart|checkout|addtocart/),
+    blog: hasPath(/\/blog(\/|$)|\/posts?(\/|$)|\/articles?(\/|$)/), // solo rutas de blog reales; las content collections alimentan data.collections, NO el tipo
+    // R-B: portfolio se decide por RUTA real (/projects, /proyectos, /portfolio, /work).
+    // El keyword suelto («portfolio» en una clase CSS o en un texto) YA NO dispara el
+    // tipo. Fallback documentado para sitios de UNA página sin rutas: una sección/grid
+    // de proyectos REAL en el home (<section id=projects…>, ProjectGrid/ProjectCard)
+    // basta para no degradar un portfolio de una página a «marketing».
+    portfolio: hasPath(/\/projects?(\/|$)|\/proyectos(\/|$)|\/portfolio(\/|$)|\/work(\/|$)/)
+      || inUi(/<section[^>]*\bid=["']?(projects|proyectos|portfolio|work)\b|<projectgrid\b|<projectcard\b/),
+    docs: hasPath(/\/docs?(\/|$)|\/documentation(\/|$)/) || [...libNames].some((n) => /docusaurus|nextra|mintlify|starlight/.test(n)) || inUi(/docusaurus|nextra/),
+    // R-D: archetipos de "cáscara nativa". Tauri/Electron → desktop; Capacitor/Android
+    // → mobile (nativo). Se detectan por RUTA de proyecto (src-tauri/, tauri.conf,
+    // android/) o por deps, no por prosa. Definen la NATURALEZA del artefacto.
+    desktop: hasPath(/(^|\/)src-tauri(\/|$)|(^|\/)tauri\.conf\.(json|json5|toml)$|(^|\/)electron(\/|$)/)
+      || inCode(/@tauri-apps|tauri-build|["']electron["']\s*:/) || [...libNames].some((n) => /^electron$/.test(n)),
+    mobileNative: hasPath(/(^|\/)(android|ios)(\/|$)|capacitor\.config\./) || inCode(/@capacitor|\bcordova\b/),
+    // Datos estructurados en archivos (regla 1 / R-C): alimenta el eje Datos, NUNCA
+    // projectType. SOLO fuentes reales de content collections — un README.md o
+    // CHANGELOG.md NUNCA cuenta (por eso no se mira `paths.some(*.md)`).
+    collections: hasPath(/(^|\/)src\/content\//) || inCode(/getcollection|getstaticpaths|contentlayer/),
   };
 
   const bp: Blueprint = {};
@@ -287,6 +477,20 @@ export function inferBlueprint(files: ImportFile[], libraries: LibItem[]): Infer
   else if (sig.table) { data.tableLayout = "dense"; data.filters = "inline"; data.pagination = "classic"; }
   if (sig.cmdk) data.search = "command-palette";
   else if (sig.table) data.search = "with-filters";
+  // Content collections = datos estructurados en archivos (build-time). Van al eje
+  // Datos, no al tipo ni a "dynamic" (regla 1). Campo libre para no acoplar el schema.
+  if (sig.collections) { (data as Record<string, unknown>).collections = true; notes.push("Datos: content collections detectadas (datos estáticos en archivos) — eje Datos, no afecta al tipo."); }
+  // R-E: los archivos backend (.py/.rs) solo pueden aportar aquí, en el eje Datos.
+  if (backendFiles.length) {
+    const be = detectBackendData(backendFiles);
+    if (be.db || be.http || be.ipc) {
+      const d = data as Record<string, unknown>;
+      if (be.db) d.backendDb = true;
+      if (be.http) d.backendHttp = true;
+      if (be.ipc) d.sidecar = true;
+      notes.push(`Datos: backend en ${be.langs.join("/") || "código nativo"} (${be.sources.join("; ")}) — eje Datos; no crea vistas ni cambia el tipo (R-E).`);
+    }
+  }
   if (Object.keys(data).length) bp.data = data;
 
   // --- Seguridad (auth) ---
@@ -299,24 +503,54 @@ export function inferBlueprint(files: ImportFile[], libraries: LibItem[]): Infer
 
   // --- Tipo de proyecto → CONDICIONA las reglas del motor (auth/seguridad/datos).
   //     Sin backend/auth/dashboard = estático/portfolio: seguridad NO obligatoria.
-  const hasBackend = sig.auth || (sig.sidebar && (sig.table || sig.charts));
-  let ptype: "static" | "dashboard" | "crud" | "mobile" | "auth-app";
+  // Capa "projectType": naturaleza GLOBAL del proyecto. Separada de las otras
+  // capas: escenas/arquetipos de preview, vistas (views[]) y categorías de catálogo.
+  const hasBackend = sig.auth || sig.commerce || sig.table || (sig.sidebar && (sig.table || sig.charts));
+  type PType = "portfolio" | "marketing" | "content" | "docs" | "dashboard" | "crud" | "commerce" | "desktop" | "auth-app" | "mobile" | "static";
+  let ptype: PType;
   let psource: string;
-  if (sig.auth) { ptype = "auth-app"; psource = "rutas/deps de auth"; }
+  // R-D: la "cáscara nativa" (desktop Tauri/Electron, mobile Capacitor/Android) define
+  // la naturaleza del artefacto y gana sobre los tipos web genéricos (dashboard/portfolio…),
+  // porque el empaquetado nativo es lo más específico y determinante del proyecto.
+  if (sig.commerce) { ptype = "commerce"; psource = "rutas/código de tienda (product/cart/checkout)"; }
+  else if (sig.desktop) { ptype = "desktop"; psource = "cáscara nativa de escritorio (src-tauri/tauri.conf/electron o deps @tauri-apps)"; }
+  else if (sig.mobileNative) { ptype = "mobile"; psource = "cáscara nativa móvil (Capacitor/Android)"; }
   else if (sig.sidebar && (sig.table || sig.charts)) { ptype = "dashboard"; psource = "sidebar + tablas/charts"; }
-  else if (sig.tabs) { ptype = "mobile"; psource = "tabs/mobile"; }
+  else if (sig.portfolio) { ptype = "portfolio"; psource = "rutas/sección real de portfolio (proyectos/work)"; }
+  else if (sig.docs) { ptype = "docs"; psource = "rutas /docs o framework de documentación"; }
+  else if (sig.blog) { ptype = "content"; psource = "rutas de blog/artículos"; }
   else if (sig.table) { ptype = "crud"; psource = "tablas de datos"; }
-  else { ptype = "static"; psource = sig.landing ? "landing/marketing sin backend ni auth" : "sin backend ni auth"; }
-  // Se persiste en el blueprint: el resolvedConfig lo usa para relajar reglas.
+  else if (sig.auth) { ptype = "auth-app"; psource = "rutas/deps de auth"; }
+  else if (sig.tabs) { ptype = "mobile"; psource = "tabs/navegación móvil"; }
+  else if (sig.landing) { ptype = "marketing"; psource = "landing/marketing (hero/pricing) sin backend"; }
+  else { ptype = "static"; psource = "sin señales claras (estático genérico)"; }
+  // Se persiste en el blueprint: resolve.ts lo usa para relajar reglas de seguridad.
   (bp as { projectType?: string }).projectType = ptype;
+  // Trazabilidad: registra que señales de tipo estaban activas y por que gano ptype.
+  const _typeSignals = [
+    sig.commerce && "commerce",
+    sig.desktop && "desktop(nativo)",
+    sig.mobileNative && "mobile(nativo)",
+    (sig.sidebar && (sig.table || sig.charts)) && "dashboard",
+    sig.portfolio && "portfolio",
+    sig.docs && "docs",
+    sig.blog && "blog",
+    sig.table && "crud(table)",
+    sig.auth && "auth",
+    sig.tabs && "mobile(tabs)",
+    sig.landing && "marketing(landing)",
+  ].filter(Boolean) as string[];
+  notes.push(`Tipo '${ptype}' (${psource}). Señales activas: ${_typeSignals.join(", ") || "ninguna"} — gana la de mayor prioridad de capa.`);
 
-  const PT_LABEL: Record<string, string> = {
-    "static": "portfolio / estático", "dashboard": "workspace / dashboard",
-    "crud": "CRUD / app de datos", "mobile": "mobile", "auth-app": "app con auth",
+  const PT_LABEL: Record<PType, string> = {
+    portfolio: "portfolio", marketing: "marketing / landing", content: "blog / contenido",
+    docs: "documentación", dashboard: "workspace / dashboard", crud: "CRUD / app de datos",
+    commerce: "e-commerce", desktop: "app de escritorio (nativa)", "auth-app": "app con auth",
+    mobile: "mobile", static: "estático / genérico",
   };
   const productType: Inferred = {
     value: PT_LABEL[ptype],
-    confidence: hasBackend || sig.tabs || sig.landing || sig.table ? "strong" : "weak",
+    confidence: ptype !== "static" ? "strong" : "weak",
     source: psource,
   };
 
@@ -328,10 +562,13 @@ export function inferBlueprint(files: ImportFile[], libraries: LibItem[]): Infer
   if (sig.sidebar && (sig.table || sig.charts)) scenes.push("dashboard");
   if (sig.auth) scenes.push("auth");
   if (sig.form) scenes.push("form");
-  if (sig.tabs) scenes.push("mobile");
+  if (sig.tabs || sig.mobileNative) scenes.push("mobile");
   if (sig.commerce) scenes.push("commerce");
   if (sig.blog) scenes.push("content");
   if (sig.settings) scenes.push("settings");
+  // Desktop (Tauri/Electron): no hay escena "desktop" en el motor; su pantalla-marco
+  // (sidebar + main) se previsualiza con el arquetipo "dashboard" (app-shell).
+  if (sig.desktop && !scenes.includes("dashboard")) scenes.push("dashboard");
   // Portfolio: sitio estatico con senales propias (proyectos/portfolio) o estatico
   // sin ninguna otra escena mejor. Se pone primero por ser la pantalla principal.
   if (sig.portfolio || (ptype === "static" && scenes.length === 0)) {
@@ -358,8 +595,12 @@ function archetypeForRoute(route: string, projectType: string): SceneId {
   if (/shop|store|products?|checkout|cart/.test(r)) return "commerce";
   if (/settings|ajustes|account/.test(r)) return "settings";
   if (/dashboard|admin/.test(r)) return "dashboard";
+  if (/\bdocs?\b|documentation/.test(r)) return "content";
   if (/contact|about|projects?|proyectos|portfolio|work/.test(r)) return "portfolio";
-  if (r === "/" || r === "") return projectType === "static" ? "portfolio" : projectType === "dashboard" ? "dashboard" : projectType === "auth-app" ? "auth" : "landing";
+  if (r === "/" || r === "") {
+    const home: Record<string, SceneId> = { portfolio: "portfolio", marketing: "landing", content: "content", docs: "content", dashboard: "dashboard", crud: "dashboard", commerce: "commerce", desktop: "dashboard", "auth-app": "auth", mobile: "mobile", static: "portfolio" };
+    return home[projectType] ?? "landing";
+  }
   return "landing";
 }
 function extractViewTitle(src: string): string | undefined {
@@ -392,41 +633,159 @@ function routeOf(path: string): { route: string; router: string } | null {
   }
   return null;
 }
+/* ------------------------- secciones por vista (Fase 2) ------------------
+   Detecta los BLOQUES de una vista (nav, hero, stats, projects, table, form,
+   footer...) desde su codigo, en orden aproximado de aparicion. Cada seccion
+   con confianza + fuente. `kind` es un registro EXTENSIBLE (string), no cerrado.
+   ------------------------------------------------------------------------- */
+const SECTION_SIGNALS: Array<{ kind: string; strong?: RegExp; weak?: RegExp }> = [
+  { kind: "nav", strong: /<nav\b|<header\b/i, weak: /navbar|\bheader\b/i },
+  { kind: "hero", weak: /\bhero\b/i },
+  { kind: "stats", weak: /\bstats?\b|\bkpis?\b|\bmetrics?\b|counter/i },
+  { kind: "projects", weak: /\bprojects?\b|\bproyectos?\b|portfolio|\bwork\b/i },
+  { kind: "features", weak: /\bfeatures?\b/i },
+  { kind: "gallery", weak: /\bgallery\b|carousel/i },
+  { kind: "pricing", weak: /\bpricing\b|\bprice\b/i },
+  { kind: "testimonials", weak: /testimonial/i },
+  { kind: "table", strong: /<table\b/i, weak: /data-?grid|datatable|react-table|\bDataTable\b/i },
+  { kind: "filters", weak: /\bfilters?\b|facet/i },
+  { kind: "chart", weak: /\bchart\b|recharts/i },
+  { kind: "form", strong: /<form\b/i, weak: /\bcontact\b|use-?form|react-hook-form/i },
+  { kind: "faq", weak: /\bfaq\b|accordion/i },
+  { kind: "sidebar", strong: /<aside\b/i, weak: /\bsidebar\b/i },
+  { kind: "footer", strong: /<footer\b/i, weak: /\bfooter\b/i },
+];
+
+function detectSections(src: string, isContent = false): { id: string; kind: string; confidence: "strong" | "weak"; source: string }[] {
+  if (!src || isContent) return [];   // contenido (md/mdx) no emite bloques de UI (regla 3)
+  src = stripStyle(src);              // R-A: un selector CSS no es un bloque de UI
+  const found: Array<{ kind: string; idx: number; conf: "strong" | "weak"; ev: string }> = [];
+  for (const sig of SECTION_SIGNALS) {
+    let idx = -1; let conf: "strong" | "weak" = "weak"; let ev = "";
+    const sec = src.search(new RegExp(`<section[^>]*\\bid=["']?${sig.kind}`, "i"));
+    if (sec >= 0) { idx = sec; conf = "strong"; ev = "<section id>"; }
+    if (idx < 0 && sig.strong) { const m = src.search(sig.strong); if (m >= 0) { idx = m; conf = "strong"; ev = "tag semantico"; } }
+    if (idx < 0 && sig.weak) { const m = src.search(sig.weak); if (m >= 0) { idx = m; conf = "weak"; ev = "nombre/keyword"; } }
+    if (idx >= 0) found.push({ kind: sig.kind, idx, conf, ev });
+  }
+  found.sort((a, b) => a.idx - b.idx);
+  return found.slice(0, 12).map((f) => ({ id: f.kind, kind: f.kind, confidence: f.conf, source: f.ev }));
+}
+
+function detectData(src: string, isContent = false, runtimeServing = false, nativeShell = false): ProjectSignal[] {
+  if (!src) return [];
+  if (isContent) {
+    // Contenido (md/mdx/src/content) = datos estáticos en archivos → solo collections (reglas 1 y 3).
+    return [
+      { kind: "static", confidence: "weak", source: "contenido estático (archivos)" },
+      { kind: "collections", confidence: "strong", source: "content collection (.md/.mdx)" },
+    ];
+  }
+  src = stripStyle(src);   // R-A: no confundir reglas CSS (.datatable{…}) con UI de datos
+  const SIG: Array<{ kind: string; strong?: RegExp; weak?: RegExp }> = [
+    { kind: "forms", strong: /<form\b|use-?form|react-hook-form|\bformik\b/i, weak: /\bform\b/i },
+    { kind: "tables", strong: /<table\b|@tanstack\/react-table|data-?grid|datatable|react-table/i },
+    { kind: "filters", weak: /\bfilters?\b|\bfacet|use-?filter/i },
+    { kind: "collections", strong: /getcollection|getstaticpaths|contentlayer|allposts|alldocs/i, weak: /\bcollection|\.mdx?\b|\bposts?\b/i },
+    { kind: "fetch", strong: /\bfetch\(|useswr|usequery|react-query|@tanstack\/react-query|\baxios\b|getserversideprops|getstaticprops|use server/i, weak: /\.json\(\)|\/api\//i },
+    { kind: "backend", strong: /\bprisma\b|drizzle|mongoose|supabase|firestore/i, weak: /\bdatabase\b|\bdb\./i },
+    { kind: "search", strong: /fuse\.js|command-?palette|\bcmdk\b/i, weak: /\bsearch\b/i },
+    { kind: "sort", weak: /\bsort\b|order-?by|orderby/i },
+    { kind: "pagination", strong: /useinfinitequery|\bcursor\b/i, weak: /pagination|load-?more/i },
+  ];
+  const out: ProjectSignal[] = [];
+  for (const s of SIG) {
+    if (s.strong && s.strong.test(src)) out.push({ kind: s.kind, confidence: "strong", source: "dep/API/tag" });
+    else if (s.weak && s.weak.test(src)) out.push({ kind: s.kind, confidence: "weak", source: "nombre/keyword" });
+  }
+  // dynamic (regla 2) = SERVING en runtime: fetch/API/DB, o framework en server/hybrid.
+  // collections y tables NO cuentan (son datos estáticos / UI). getStaticPaths ⇒ static.
+  const prerendered = /getstaticpaths/i.test(src);
+  const runtimeData = out.some((o) => ["fetch", "backend"].includes(o.kind));
+  // R-D: una app nativa (desktop/mobile) NO sirve rutas web; sus datos llegan por
+  // IPC/sidecar (eje Datos), así que la vista es estática, no runtime-dynamic.
+  const dynamic = !prerendered && !nativeShell && (runtimeServing || runtimeData);
+  out.unshift(dynamic
+    ? { kind: "dynamic", confidence: "strong", source: runtimeServing ? "framework en modo server/hybrid" : "fetch/API/DB en runtime" }
+    : { kind: "static", confidence: "weak", source: nativeShell ? "app nativa (datos por IPC/sidecar, no serving web)" : prerendered ? "getStaticPaths (generada en build)" : "sin serving en runtime" });
+  return out;
+}
+
+function detectInteraction(src: string): ProjectSignal[] {
+  if (!src) return [];
+  src = stripStyle(src);   // R-A: clases CSS (.modal, .drawer…) no son interacción real
+  const SIG: Array<{ kind: string; strong?: RegExp; weak?: RegExp }> = [
+    { kind: "navigation", strong: /<nav\b|use-?router|next\/link|react-router|<navlink/i, weak: /\bnavigation\b|navbar/i },
+    { kind: "tabs", strong: /role=["']tab|<tabs\b|@radix-ui\/react-tabs/i, weak: /\btabs?\b/i },
+    { kind: "drawers", strong: /<drawer\b|\bvaul\b/i, weak: /\bdrawer\b|\bsheet\b/i },
+    { kind: "modals", strong: /<dialog\b|role=["']dialog|<modal\b|@radix-ui\/react-dialog/i, weak: /\bmodal\b|\bdialog\b/i },
+    { kind: "multiStep", strong: /\bstepper\b|multi-?step|use-?steps/i, weak: /\bwizard\b/i },
+    { kind: "search", strong: /type=["']search|fuse\.js|use-?search/i, weak: /\bsearch\b/i },
+    { kind: "commandPalette", strong: /\bcmdk\b|command-?palette|\bkbar\b/i, weak: /ctrl\+k/i },
+    { kind: "motion", strong: /framer-motion|\bmotion\.|use-?animation|\bgsap\b|@react-spring|auto-?animate/i, weak: /\banimate\b/i },
+    { kind: "menus", strong: /dropdown-?menu|@radix-ui\/react-dropdown|context-?menu|<popover/i, weak: /\bdropdown\b|\bpopover\b/i },
+    { kind: "filtersInteractive", strong: /use-?filter|on-?filter|faceted/i, weak: /\bfilters?\b/i },
+  ];
+  const out: ProjectSignal[] = [];
+  for (const s of SIG) {
+    if (s.strong && s.strong.test(src)) out.push({ kind: s.kind, confidence: "strong", source: "dep/API/tag" });
+    else if (s.weak && s.weak.test(src)) out.push({ kind: s.kind, confidence: "weak", source: "nombre/keyword" });
+  }
+  return out;
+}
+
 export function detectViews(files: ImportFile[], projectType: string): ProjectView[] {
   const norm = (r: string) => { r = ("/" + r.replace(/^\/+/, "")).replace(/\/{2,}/g, "/"); return r.length > 1 ? r.replace(/\/$/, "") : "/"; };
+  // R-E: los archivos backend (.py/.rs) nunca generan vistas ni bloques de UI.
+  const front = files.filter((f) => !isBackendFile(f.name));
+  const runtimeServing = detectServerOutput(front);   // regla 2: ¿sirve en runtime?
+  const nativeShell = projectType === "desktop";      // R-D: app nativa → vistas estáticas
   const seen = new Map<string, ProjectView>();
-  const add = (rawRoute: string, src: string, router: string, conf: "strong" | "default") => {
+  const add = (rawRoute: string, src: string, router: string, conf: "strong" | "default", isContent = false) => {
     const route = norm(rawRoute);
     if (seen.has(route)) return;
-    const dynamic = /\[[^\]]+\]/.test(route);
     const title = extractViewTitle(src);
+    const sections = detectSections(src, isContent);
+    const data = detectData(src, isContent, runtimeServing, nativeShell);
+    const interaction = isContent ? [] : detectInteraction(src);
+    // dynamic = serving REAL (lo decide detectData), no la forma [param] de la ruta (regla 2).
+    const dynamic = data[0]?.kind === "dynamic";
     seen.set(route, {
       id: slugifyRoute(route),
       route,
       ...(title ? { title } : {}),
       previewArchetype: archetypeForRoute(route, projectType),
       ...(dynamic ? { dynamic: true } : {}),
+      ...(sections.length ? { sections } : {}),
+      ...(data.length ? { data } : {}),
+      ...(interaction.length ? { interaction } : {}),
       confidence: conf,
       source: router === "one-page" ? "sitio de una pagina (sin rutas)" : "ruta " + router,
     });
   };
-  for (const f of files) {
+  for (const f of front) {
     const r = routeOf(f.name);
-    if (r) add(r.route, f.text, r.router, "strong");
+    if (r) add(r.route, f.text, r.router, "strong", isContentFile(f.name));
   }
+  // Sitio de una sola página: la vista "/" se arma SOLO con código de UI. El
+  // contenido (.md/.mdx, README) es datos, no markup (regla 3), así que no
+  // contamina los bloques/datos de la vista.
+  const uiFront = front.filter((f) => !isContentFile(f.name));
   if (seen.size === 0) {
-    const code = files.map((f) => f.text).join("\n");
+    const code = uiFront.map((f) => f.text).join("\n");
     for (const m of code.matchAll(/<Route\s+[^>]*\bpath=["'`]([^"'`]+)["'`]/g)) add(m[1], "", "router", "strong");
   }
-  if (seen.size === 0) add("/", files.map((f) => f.text).join("\n"), "one-page", "default");
+  if (seen.size === 0) add("/", uiFront.map((f) => f.text).join("\n"), "one-page", "default");
   return [...seen.values()].slice(0, 40);
 }
 
 /* --------------------------------- extract --------------------------------- */
 export function extractIdentity(files: ImportFile[]): ImportResult {
   const notes: string[] = [];
-  const styleText = files.filter((f) => /\.(css|scss|less|js|jsx|ts|tsx|html|svelte|vue|astro)$/i.test(f.name) || /tailwind|globals|theme|tokens/i.test(f.name)).map((f) => f.text).join("\n");
-  const allText = files.map((f) => f.text).join("\n");
+  // R-E: los archivos backend (.py/.rs) no aportan identidad visual ni componentes.
+  const frontFiles = files.filter((f) => !isBackendFile(f.name));
+  const styleText = frontFiles.filter((f) => /\.(css|scss|less|js|jsx|ts|tsx|html|svelte|vue|astro)$/i.test(f.name) || /tailwind|globals|theme|tokens/i.test(f.name)).map((f) => f.text).join("\n");
+  const allText = frontFiles.map((f) => f.text).join("\n");
 
   // Colores por frecuencia (de estilos; si no, de todo).
   const counts = collectColors(styleText || allText);
@@ -459,7 +818,7 @@ export function extractIdentity(files: ImportFile[]): ImportResult {
   const fonts = collectFonts(styleText || allText);
   const radii = collectRadii(styleText || allText);
   const pkg = files.find((f) => /(^|\/)package\.json$/i.test(f.name));
-  const libraries = pkg ? detectLibraries(pkg.text) : [];
+  const libraries = detectStack(files);   // stack real: package.json + requirements.txt
 
   if (!accents.length) notes.push("No se detectaron colores de acento claros; se usa el naranja de marca por defecto.");
   if (!fonts.length) notes.push("No se detectaron tipografías; se mantienen Inter / Space Grotesk.");
@@ -488,6 +847,9 @@ export function extractIdentity(files: ImportFile[]): ImportResult {
   const projectTypeRaw = (inferred.blueprint as { projectType?: string }).projectType ?? "static";
   const detectedViews = detectViews(files, projectTypeRaw);
   if (detectedViews.length) mergedBp.views = detectedViews;
+  // Estructura real del proyecto (semilla honesta del árbol / export tree.json).
+  const detectedTree = buildStructureTree(files);
+  if (detectedTree.length) mergedBp.architecture = { ...(mergedBp.architecture ?? {}), detectedTree };
   if (libraries.length) mergedBp.libraries = { items: libraries };
   if (Object.keys(mergedBp).length) {
     const root = doc as unknown as { blueprint?: Blueprint };
@@ -515,7 +877,7 @@ export function extractIdentity(files: ImportFile[]): ImportResult {
     auth: inferred.auth,
     scenes: inferred.scenes,
     views: detectedViews,
-    components: detectComponents(allText.toLowerCase()),
+    components: detectComponents(stripStyle(allText).toLowerCase()),   // R-A: sin CSS
   };
 
   return { tokens: doc, summary };

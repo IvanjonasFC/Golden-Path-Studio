@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Modal } from "./AssetKit";
 import { extractIdentity, type ImportFile, type ImportResult } from "@/lib/importBrand";
 import { isAnalysisReport, type RuntimeReport, type LayoutSignal } from "@/lib/analysis";
+import { type TraceReport, countByKind } from "@/lib/trace";
 import { seedScenes } from "@/lib/seed";
+import { seedEditableFromBlueprint } from "@/lib/seedEditor";
+import { type Blueprint } from "@/lib/blueprint";
 import { type SceneId } from "@/lib/scenes";
 
 const TEXT_RE = /\.(css|scss|less|js|jsx|ts|tsx|mjs|cjs|json|md|mdx|html|svelte|vue|astro|txt)$/i;
@@ -34,13 +37,16 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
   const [localPath, setLocalPath] = useState("");
   const [helper, setHelper] = useState<"checking" | "up" | "down">("checking");
   const [picking, setPicking] = useState(false);
+  const [playwrightOk, setPlaywrightOk] = useState(false);
   const [useRuntime, setUseRuntime] = useState(false);
   const [baseURL, setBaseURL] = useState("");
   const [runtime, setRuntime] = useState<RuntimeReport | null>(null);
+  const [trace, setTrace] = useState<TraceReport | null>(null);
+  const [origin, setOrigin] = useState<"upload" | "helper" | "analysis-json">("upload");
   const filesRef = useRef<HTMLInputElement>(null);
   const dirRef = useRef<HTMLInputElement>(null);
 
-  const reset = () => { setFiles([]); setPaste(""); setResult(null); setName(""); setError(null); setBusy(false); setRuntime(null); };
+  const reset = () => { setFiles([]); setPaste(""); setResult(null); setName(""); setError(null); setBusy(false); setRuntime(null); setTrace(null); setOrigin("upload"); };
   const close = () => { reset(); onClose(); };
 
   const onPick = async (list: FileList | null) => {
@@ -72,6 +78,8 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
         if (isAnalysisReport(rep)) {
           setResult({ tokens: rep.brand.tokens, summary: rep.summary });
           setRuntime(rep.runtime ?? null);
+          setTrace(rep.trace ?? null);
+          setOrigin("analysis-json");
           setName(rep.brand.name ?? rep.summary.suggestedName ?? "");
           return;
         }
@@ -80,6 +88,9 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
     try {
       const r = extractIdentity(all);
       setResult(r);
+      setRuntime(null);
+      setTrace(null);
+      setOrigin("upload");
       setName(r.summary.suggestedName ?? "");
     } catch (e) {
       setError("No se pudo analizar: " + (e as Error).message);
@@ -102,6 +113,8 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
       if (!r.ok || !isAnalysisReport(rep)) { setError(rep?.error ?? "El helper local no devolvió un análisis válido."); setBusy(false); return; }
       setResult({ tokens: rep.brand.tokens, summary: rep.summary });
       setRuntime(rep.runtime ?? null);
+      setTrace(rep.trace ?? null);
+      setOrigin("helper");
       setName(rep.brand.name ?? rep.summary.suggestedName ?? "");
       setBusy(false);
     } catch {
@@ -119,7 +132,8 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
       const t = setTimeout(() => c.abort(), 1500);
       const r = await fetch(`${HELPER}/health`, { signal: c.signal });
       clearTimeout(t);
-      setHelper(r.ok ? "up" : "down");
+      if (r.ok) { const j = await r.json().catch(() => ({})); setPlaywrightOk(!!(j as { playwright?: boolean }).playwright); setHelper("up"); }
+      else setHelper("down");
     } catch { setHelper("down"); }
   };
   useEffect(() => { if (open && mode === "project") checkHelper(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, mode]);
@@ -148,10 +162,17 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
     if (!result || !name.trim() || busy) return;
     setBusy(true);
     try {
+      // PUENTE modelo → UI editable: vuelca las señales del análisis a los controles
+      // editables (arquitectura/árbol, datos, interacción) de forma NO destructiva y
+      // trazable, para que la marca NAZCA con las pestañas pobladas, no "con defaults".
+      // Solo en import nuevo (autosemilla inicial); reaplicar luego es idempotente.
+      const seededTokens = structuredClone(result.tokens) as Record<string, unknown>;
+      const baseBp = (seededTokens.blueprint as Blueprint | undefined) ?? {};
+      seededTokens.blueprint = seedEditableFromBlueprint(baseBp).bp;
       const res = await fetch("/api/brands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), description: "Importada de un proyecto", tokens: result.tokens }),
+        body: JSON.stringify({ name: name.trim(), description: "Importada de un proyecto", tokens: seededTokens }),
       });
       const b = await res.json();
       if (b?.id) {
@@ -170,13 +191,36 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
               },
             );
             if (autoSeeded.length) {
-              const tokens = structuredClone(result.tokens) as Record<string, unknown>;
+              const tokens = structuredClone(seededTokens) as Record<string, unknown>;
               const bp = { ...((tokens.blueprint as Record<string, unknown>) ?? {}), autoSeeded };
               tokens.blueprint = bp;
               await fetch(`/api/brands/${b.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tokens, previewIds: autoSeeded }) });
             }
           } catch { /* siembra best-effort: nunca bloquea la creación */ }
         }
+        // Auditoría de importación (best-effort, nunca bloquea la creación).
+        try {
+          const sum = result.summary;
+          await fetch("/api/imports", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              brandId: b.id,
+              origin,
+              root: origin === "helper" ? localPath.trim() : null,
+              tool: origin === "helper" ? "scan-serve" : origin === "analysis-json" ? "scan-repo" : "browser",
+              filesScanned: sum.filesRead,
+              productType: sum.productType?.value ?? null,
+              scenes: sum.scenes ?? [],
+              runtime: !!runtime?.enabled,
+              runtimeRan: !!runtime?.ran,
+              ok: trace?.ok ?? true,
+              warnings: trace?.warnings ?? sum.notes ?? [],
+              errors: trace?.errors ?? [],
+              durationMs: trace ? trace.finishedAt - trace.startedAt : null,
+              trace: trace ?? null,
+            }),
+          });
+        } catch { /* auditoría best-effort */ }
         window.location.href = `/marcas/${b.id}`;
         return;
       }
@@ -233,22 +277,29 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
             )}
             <button type="button" onClick={checkHelper} className="ml-auto shrink-0 rounded px-2 py-0.5 text-[10px] font-medium text-[var(--color-muted)] underline-offset-2 hover:text-[var(--color-text)] hover:underline">Reintentar</button>
           </div>
+          <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[var(--color-muted)]">Proyecto (carpeta)</label>
           <div className="mb-3 flex flex-wrap gap-2">
             <button onClick={pickFolder} disabled={picking || helper !== "up"} title={helper !== "up" ? "Arranca el helper local primero" : "Abrir el explorador de Windows"} className="whitespace-nowrap rounded-lg border border-[var(--color-border)] bg-[var(--color-panel-2)] px-3 py-2 text-xs font-medium text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)]/60 disabled:cursor-not-allowed disabled:opacity-40">{picking ? "Abriendo…" : "Elegir carpeta…"}</button>
             <input value={localPath} onChange={(e) => setLocalPath(e.target.value)} onKeyDown={(e) => e.key === "Enter" && analyzeLocal()} placeholder="C:\\Users\\IvN\\Desktop\\mi-proyecto" className={field + " min-w-[200px] flex-1 font-mono text-[11px]"} />
             <button onClick={analyzeLocal} disabled={busy || helper !== "up"} className="whitespace-nowrap rounded-lg bg-[var(--color-accent)] px-3 py-2 text-xs font-bold text-black transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40">{busy ? "Analizando…" : "Analizar con helper local"}</button>
           </div>
-          {/* Runtime opcional (Playwright): observa el proyecto YA en marcha para subir fidelidad */}
+          {/* Runtime opcional (Playwright): CAPA EXTRA sobre el análisis estático. */}
           <div className="mb-3 rounded-lg border border-[var(--color-border)] bg-black/15 p-2.5">
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)]/80">Runtime (opcional)</div>
             <label className="flex items-start gap-2 text-[11px] text-[var(--color-muted)]">
               <input type="checkbox" checked={useRuntime} onChange={(e) => setUseRuntime(e.target.checked)} className="mt-0.5" />
               <span>
-                <b className="text-[var(--color-text)]">Runtime (Playwright)</b> — observa el proyecto <b className="text-[var(--color-text)]">ya ejecutado</b>: navega rutas, captura desktop + mobile y detecta señales reales de layout. Requiere el dev server en marcha y Playwright en el helper. Si no puede, se registra como aviso y el análisis estático sigue siendo válido.
+                <b className="text-[var(--color-text)]">Runtime (Playwright)</b> — capa extra que observa el proyecto <b className="text-[var(--color-text)]">ya ejecutado</b> (navega rutas y captura desktop + mobile). No sustituye al análisis: <b className="text-[var(--color-text)]">el análisis lee la carpeta</b>; esta URL solo la usa el runtime.
               </span>
             </label>
             {useRuntime && (
-              <input value={baseURL} onChange={(e) => setBaseURL(e.target.value)} placeholder="baseURL (opcional) — p. ej. http://localhost:3000 · vacío = autodetectar"
-                className={field + " mt-2 w-full font-mono text-[11px]"} />
+              <>
+                <input value={baseURL} onChange={(e) => setBaseURL(e.target.value)} placeholder="URL del dev server — p. ej. http://localhost:4321 · vacío = autodetectar"
+                  className={field + " mt-2 w-full font-mono text-[11px]"} />
+                {helper === "up" && !playwrightOk && (
+                  <p className="mt-2 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[10px] leading-relaxed text-amber-300">Playwright no está en el helper: el runtime <b>se omitirá</b> (el análisis estático sí funciona). Instala <code className="rounded bg-black/30 px-1">npm i -D playwright</code> + <code className="rounded bg-black/30 px-1">npx playwright install chromium</code> y reinicia el helper.</p>
+                )}
+              </>
             )}
           </div>
           <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] text-[var(--color-muted)]">
@@ -428,6 +479,24 @@ export default function ImportBrandModal({ open, onClose }: { open: boolean; onC
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Trazabilidad estructurada: existe un log de auditoría de esta importación */}
+      {trace && (
+        <div className="mt-3 rounded-xl border border-[var(--color-border)] bg-black/20 p-3 text-[11px] text-[var(--color-muted)]">
+          <div className="mb-1 flex items-center gap-2 font-bold uppercase tracking-wider">
+            Trazabilidad
+            <span className="rounded border border-white/15 bg-white/5 px-1 py-0.5 text-[9px] font-bold uppercase">{origin}</span>
+            {trace.ok
+              ? <span className="rounded border border-emerald-400/40 bg-emerald-400/10 px-1 py-0.5 text-[9px] font-bold uppercase text-emerald-300">ok</span>
+              : <span className="rounded border border-red-400/40 bg-red-400/10 px-1 py-0.5 text-[9px] font-bold uppercase text-red-300">con errores</span>}
+          </div>
+          <div>
+            {trace.events.length} evento(s) · {trace.warnings.length} aviso(s) · {trace.errors.length} error(es)
+            {(() => { const c = countByKind(trace.events); const parts = Object.entries(c).slice(0, 6).map(([k, n]) => `${k}×${n}`); return parts.length ? " · " + parts.join(", ") : ""; })()}
+          </div>
+          <p className="mt-1 text-[9px] opacity-60">Log completo guardado en tu equipo (.analysis/logs/import-*.json) y en el historial de la marca.</p>
         </div>
       )}
     </Modal>

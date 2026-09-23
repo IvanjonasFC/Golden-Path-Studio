@@ -352,7 +352,13 @@ export default function CollectionDetail({ initial }: { initial: Collection }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={c.thumbnail} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-2xl">⚛️</div>
+                  <div className="flex h-full items-center justify-center text-[var(--color-accent,#f0a470)]">
+                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                      <polyline points="2 17 12 22 22 17" />
+                      <polyline points="2 12 12 17 22 12" />
+                    </svg>
+                  </div>
                 )}
                 <a
                   href={`/component/${encodeURIComponent(c.id)}`}

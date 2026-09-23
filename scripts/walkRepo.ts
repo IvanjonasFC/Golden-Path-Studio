@@ -7,8 +7,13 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { ImportFile } from "../src/lib/importBrand";
 
-export const TEXT_RE = /\.(css|scss|less|js|jsx|ts|tsx|mjs|cjs|json|md|mdx|html|svelte|vue|astro|txt)$/i;
-export const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "dist", "build", "out", "coverage", ".turbo", ".vercel", ".cache", ".svelte-kit", ".astro"]);
+// R-E: se incluyen .py/.rs para que el eje DATOS pueda ver el backend/sidecar. NO
+// se convierten en UI ni en rutas: importBrand los aísla (isBackendFile) y solo
+// emiten señales de datos con patrones fuertes.
+export const TEXT_RE = /\.(css|scss|less|js|jsx|ts|tsx|mjs|cjs|json|md|mdx|html|svelte|vue|astro|txt|py|rs)$/i;
+// Directorios pesados/generados que nunca se analizan (incluye build de Rust `target`
+// y entornos Python `venv`/`__pycache__`, relevantes en apps Tauri con sidecar).
+export const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "dist", "build", "out", "coverage", ".turbo", ".vercel", ".cache", ".svelte-kit", ".astro", "target", "venv", "__pycache__"]);
 // Nunca leer secretos ni lockfiles ruidosos.
 const SKIP_FILES = /(^|\/)(\.env(\..*)?|package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$/i;
 const MAX_FILES = 4000;

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <defs>
+          <linearGradient id="ctaGlow_6a61a4ae0cd891fdf74d708a" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1e1b4b"/>
+            <stop offset="100%" stop-color="#0c0e17"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#ctaGlow_6a61a4ae0cd891fdf74d708a)"/>
+        <circle cx="400" cy="240" r="300" fill="radial-gradient(circle, rgba(168,85,247,0.25) 0%, transparent 70%)" opacity="0.4"/>
+
+        <!-- Center CTA Banner Card -->
+        <rect x="80" y="70" width="640" height="340" rx="16" fill="rgba(255,255,255,0.03)" stroke="rgba(168,85,247,0.3)" stroke-width="1.5"/>
+        
+        <text x="400" y="140" text-anchor="middle" fill="#c084fc" font-size="12" font-weight="800" letter-spacing="2">DEPLOY IN MINUTES</text>
+        <text x="400" y="185" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="900">Paradiso CTA</text>
+        <text x="400" y="225" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-size="13">Perfect for real estate websites collecting leads through newsletter subscr...</text>
+
+        <!-- CTA Buttons -->
+        <rect x="250" y="265" width="140" height="46" rx="8" fill="#a855f7"/>
+        <text x="320" y="293" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="800">START FREE</text>
+
+        <rect x="410" y="265" width="140" height="46" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.2)"/>
+        <text x="480" y="293" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">SCHEDULE DEMO</text>
+
+        <text x="400" y="360" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="10">No credit card required · Instant setup · Full API access</text>
+      </svg>

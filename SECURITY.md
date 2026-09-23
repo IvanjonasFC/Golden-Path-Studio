@@ -1,13 +1,20 @@
-# Política de seguridad
+# Security Policy
 
-## Versiones soportadas
-Se da soporte a la última versión publicada en `main`.
+## Supported versions
 
-## Reportar una vulnerabilidad
-No abras un issue público para fallos de seguridad. Escribe a **ivanjonasfc@gmail.com**
-con los detalles y, si es posible, un caso reproducible. Recibirás confirmación y,
-tras la corrección, crédito si lo deseas.
+The latest version published on `main` is supported.
 
-## Notas
-- El helper `scan-serve` escucha **solo en 127.0.0.1**: no expone el disco fuera de tu equipo.
-- El análisis no sube tu código: la web pide analizar una carpeta por ruta y solo recibe el resultado.
+## Reporting a vulnerability
+
+Please do **not** open a public issue for security problems. Email
+**ivanjonasfc@gmail.com** with the details and, if possible, a reproducible case.
+You will get an acknowledgement and, after a fix, credit if you want it.
+
+## Notes
+
+- Golden Path Studio is local-first: the catalog, brands and collections live in a
+  local SQLite file and are never uploaded.
+- The optional `scan-serve` helper listens on **127.0.0.1 only** — it is not reachable
+  from outside your machine and returns analysis results rather than uploading code.
+- The MCP server is **read-only** over the catalog: it searches and returns code, it
+  does not modify your database.

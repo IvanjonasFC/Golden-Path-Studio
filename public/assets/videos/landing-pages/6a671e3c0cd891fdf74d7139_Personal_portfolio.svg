@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#0a0a0c"/>
+        
+        <text x="60" y="50" fill="#ffffff" font-size="14" font-weight="800">SELECTED WORKS</text>
+        <text x="740" y="50" text-anchor="end" fill="rgba(255,255,255,0.4)" font-size="11">2024 &mdash; 2026</text>
+
+        <text x="60" y="150" fill="rgba(255,255,255,0.4)" font-size="12" font-weight="700">CREATIVE DIRECTION &amp; CODE</text>
+        <text x="60" y="200" fill="#ffffff" font-size="44" font-weight="900" letter-spacing="-1">Personal portfolio</text>
+        <text x="60" y="240" fill="rgba(255,255,255,0.6)" font-size="14">A cinematic personal portfolio that blends immersive visuals, ele...</text>
+
+        <!-- Project showcase cards -->
+        <rect x="60" y="280" width="315" height="150" rx="8" fill="#141418" stroke="rgba(255,255,255,0.1)"/>
+        <text x="85" y="315" fill="#f59e0b" font-size="10" font-weight="800">BRAND ATELIER</text>
+        <text x="85" y="340" fill="#ffffff" font-size="16" font-weight="800">Aura Digital Identity</text>
+        <text x="85" y="400" fill="rgba(255,255,255,0.4)" font-size="11">Explore case study &rarr;</text>
+
+        <rect x="405" y="280" width="315" height="150" rx="8" fill="#141418" stroke="rgba(255,255,255,0.1)"/>
+        <text x="430" y="315" fill="#3b82f6" font-size="10" font-weight="800">FINTECH PRODUCT</text>
+        <text x="430" y="340" fill="#ffffff" font-size="16" font-weight="800">Norvik Mobile App</text>
+        <text x="430" y="400" fill="rgba(255,255,255,0.4)" font-size="11">Explore case study &rarr;</text>
+      </svg>

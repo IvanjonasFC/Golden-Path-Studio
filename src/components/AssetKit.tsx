@@ -30,14 +30,14 @@ export function Modal({
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative flex w-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-popover)] shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+        className="relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-popover)] shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
         style={{ maxWidth: width }}
       >
         <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-5 py-3">
           <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--color-text)]">{title}</h3>
           <button type="button" onClick={onClose} className="ml-auto rounded-md p-1 text-[var(--color-muted)] transition-colors hover:bg-white/10 hover:text-[var(--color-text)]" aria-label="Cerrar">✕</button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
         {footer && <div className="flex items-center justify-end gap-2 border-t border-[var(--color-border)] px-5 py-3">{footer}</div>}
       </div>
     </div>

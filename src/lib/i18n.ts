@@ -193,7 +193,6 @@ export const DICT: Record<string, string> = {
   "Añadir": "Add",
   "Sin patrón": "No pattern",
   "Añade componentes a tu marca": "Add components to your brand",
-  "🚀 Blueprint Universal": "🚀 Universal Blueprint",
   "Blueprint Universal": "Universal Blueprint",
   "Producto": "Product",
   "Soluciones": "Solutions",

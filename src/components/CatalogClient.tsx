@@ -24,6 +24,11 @@ const SOURCE_COLORS: Record<string, string> = {
   cult: "#fb923c",
   kokonut: "#f0a470",
   shadcn: "#e5e7eb",
+  kibo: "#facc15",
+  sceneai: "#38bdf8",
+  ipromptui: "#818cf8",
+  vibecoding: "#ec4899",
+  promptvault: "#10b981",
 };
 
 export default function CatalogClient({
@@ -97,6 +102,13 @@ export default function CatalogClient({
           <Select value={source} onChange={setSource} label="Fuente" options={facets.source} />
           <Select value={category} onChange={setCategory} label="Categoria" options={facets.category} />
           <Select value={framework} onChange={setFramework} label="Framework" options={facets.framework} />
+          <a
+            href="/prompts"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3 py-2 text-xs font-bold text-[var(--color-accent)] transition hover:bg-[var(--color-accent)] hover:text-black whitespace-nowrap"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Galería de Prompts (185) →
+          </a>
           {(q || source || category || framework) && (
             <button
               onClick={() => {
@@ -223,13 +235,24 @@ function Card({ c }: { c: ComponentDTO }) {
           />
         ) : visible && c.thumbnail ? (
           <a href={href} className="block h-full w-full cursor-pointer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={c.thumbnail}
-              alt={c.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition hover:scale-105"
-            />
+            {/\.(mp4|mov)(\?.*)?$/i.test(c.thumbnail) ? (
+              <video
+                src={c.thumbnail}
+                muted
+                loop
+                autoPlay
+                playsInline
+                className="h-full w-full object-cover transition hover:scale-105"
+              />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={c.thumbnail}
+                alt={c.name}
+                loading="lazy"
+                className="h-full w-full object-cover transition hover:scale-105"
+              />
+            )}
           </a>
         ) : (
           <PreviewFallback framework={c.framework} ready={visible} />
@@ -282,7 +305,14 @@ function Card({ c }: { c: ComponentDTO }) {
 function PreviewFallback({ framework, ready }: { framework: string; ready: boolean }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_50%_40%,#1c1c26,#0b0b0f)]">
-      <span className="text-3xl">{ready ? "⚛️" : "…"}</span>
+      <span className="text-[var(--color-accent,#f0a470)]">
+        {ready ? (
+          <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+        ) : "…"}
+      </span>
       <span className="text-xs text-[var(--color-muted)]">
         {framework} · ver codigo
       </span>

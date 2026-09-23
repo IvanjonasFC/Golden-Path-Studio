@@ -17,6 +17,7 @@
    lo contradice de forma trazable (runtime.confidenceAdjustments).
    ============================================================================ */
 import { extractIdentity, type ImportFile, type ImportSummary } from "./importBrand";
+import { Tracer, type TraceReport } from "./trace";
 import type { TokenGroup } from "./tokens";
 import type { Blueprint, ProjectView } from "./blueprint";
 
@@ -128,15 +129,38 @@ export interface AnalysisReport {
   summary: ImportSummary;          // evidencia + confianza + fuente por campo (ESTÁTICA)
   project?: { projectType?: ImportSummary["productType"]; views: ProjectView[] };  // Fase 1: modelo proyecto -> vistas
   runtime?: RuntimeReport;         // capa dinámica opcional (Playwright)
+  trace?: TraceReport;             // trazabilidad estructurada de toda la importación
 }
 
 /** Construye un AnalysisReport a partir de archivos del proyecto (capa estática).
  *  Reutiliza extractIdentity (que ya infiere blueprint y arma el summary).
- *  El runtime, si lo hay, se adjunta después con `attachRuntime`. */
-export function buildAnalysis(files: ImportFile[], meta: { root: string; tool?: string }): AnalysisReport {
+ *  El runtime, si lo hay, se adjunta después con `attachRuntime`.
+ *
+ *  Trazabilidad: si `meta.tracer` viene dado (operación con varias fases:
+ *  estático + runtime), emite en él y NO cierra el trace — lo cierra quien
+ *  orquesta. Si no viene, crea uno local, emite y adjunta `trace` al informe
+ *  (camino navegador, de una sola fase). */
+export function buildAnalysis(files: ImportFile[], meta: { root: string; tool?: string; tracer?: Tracer }): AnalysisReport {
+  const shared = meta.tracer;
+  const tr = shared ?? new Tracer();
+  tr.emit("files_scanned", { count: files.length, root: meta.root });
+
   const { tokens, summary } = extractIdentity(files);
+  tr.emit("identity_extracted", {
+    name: summary.suggestedName, colors: summary.colors.length,
+    fonts: summary.fonts.length, radii: summary.radii.length, libraries: summary.libraries.length,
+  });
+
   const blueprint = (tokens as unknown as { blueprint?: Blueprint }).blueprint ?? {};
-  return {
+  tr.emit("blueprint_inferred", {
+    navigation: summary.navigation?.value, navigationConfidence: summary.navigation?.confidence,
+    architecture: summary.architecture?.value, productType: summary.productType?.value,
+    scenes: summary.scenes, components: summary.components.length,
+  });
+  // Notas del análisis = límites/baja confianza → warnings trazables.
+  for (const note of summary.notes) tr.warn("import_warning", note);
+
+  const report: AnalysisReport = {
     version: ANALYSIS_VERSION,
     generatedAt: Date.now(),
     source: { root: meta.root, filesScanned: files.length, tool: meta.tool ?? "scan-repo", toolVersion: ANALYSIS_VERSION },
@@ -145,11 +169,18 @@ export function buildAnalysis(files: ImportFile[], meta: { root: string; tool?: 
     summary,
     project: summary.views && summary.views.length ? { projectType: summary.productType, views: summary.views } : undefined,
   };
+  if (!shared) report.trace = tr.report();   // sin orquestador: cerramos aquí
+  return report;
 }
 
 /** Adjunta (sin mutar destructivamente lo estático) el informe de runtime. */
 export function attachRuntime(report: AnalysisReport, runtime: RuntimeReport): AnalysisReport {
   return { ...report, runtime };
+}
+
+/** Adjunta el trace final (cerrado por el orquestador: estático + runtime). */
+export function attachTrace(report: AnalysisReport, trace: TraceReport): AnalysisReport {
+  return { ...report, trace };
 }
 
 /** ¿Un objeto arbitrario cumple el contrato (para consumirlo en la app)? */

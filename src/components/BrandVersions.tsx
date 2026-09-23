@@ -31,7 +31,17 @@ export type RestoredBrand = {
   parts?: unknown[];
 };
 
-export function BrandVersions({ brandId, getDraft, onRestored }: { brandId: string; getDraft?: () => { name: string; tokens: unknown; previewIds: string[] }; onRestored?: (brand: RestoredBrand) => void }) {
+export function BrandVersions({
+  brandId,
+  getDraft,
+  onRestored,
+  onPublished,
+}: {
+  brandId: string;
+  getDraft?: () => { name: string; tokens: unknown; previewIds: string[] };
+  onRestored?: (brand: RestoredBrand) => void;
+  onPublished?: () => void;
+}) {
   const [versions, setVersions] = useState<Version[]>([]);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
@@ -68,10 +78,11 @@ export function BrandVersions({ brandId, getDraft, onRestored }: { brandId: stri
       if (r.ok) {
         const v = (d as { version?: { version?: string } }).version?.version ?? "";
         logEvent("version.publish", { version: v });
-        setMsg({ kind: "ok", text: `Snapshot publicado: ${v}` });
+        setMsg({ kind: "ok", text: `Punto de control guardado con éxito: ${v}` });
         setVersionInput(""); setLabelInput(""); await load();
+        if (onPublished) onPublished();
       } else if (r.status === 422) {
-        setMsg({ kind: "blocked", text: "Publicacion bloqueada: faltan campos obligatorios.", issues: (d as { blockingIssues?: string[] }).blockingIssues ?? [] });
+        setMsg({ kind: "blocked", text: "Publicación bloqueada: faltan campos obligatorios.", issues: (d as { blockingIssues?: string[] }).blockingIssues ?? [] });
       } else {
         setMsg({ kind: "error", text: (d as { error?: string }).error ?? "Error al publicar." });
       }

@@ -4,7 +4,8 @@ import {
   type EffectsConfig,
   type TokenGroup,
 } from "./tokens";
-import type { SceneId } from "./scenes";
+import type { SceneId, SceneBlockInstance } from "./scenes";
+import type { PortfolioProject } from "./portfolioProjects";
 
 /* ============================================================================
    Blueprint = "identidad de comportamiento" de una marca (además de la visual).
@@ -17,6 +18,8 @@ import type { SceneId } from "./scenes";
  *  `previewArchetype` es SOLO el arquetipo con el que se previsualiza la vista,
  *  no su definicion real. `sections` queda preparado para la Fase 2 (kind como
  *  string = registro extensible, no union cerrado). */
+export interface ProjectSignal { kind: string; confidence: "strong" | "weak"; source: string }
+
 export interface ProjectView {
   id: string;
   route: string;
@@ -24,11 +27,15 @@ export interface ProjectView {
   previewArchetype: SceneId;
   dynamic?: boolean;
   sections?: { id: string; kind: string; confidence?: string; source?: string }[];
+  data?: ProjectSignal[];        // señales de datos de la vista (Fase 3)
+  interaction?: ProjectSignal[]; // señales de interacción de la vista (Fase 3)
   confidence: "strong" | "weak" | "default";
   source: string;
 }
 
 export interface Blueprint {
+  /** Versión del esquema del blueprint (v2 = CMS dinámico con dataBinding). */
+  schemaVersion?: number;
   /** Vistas/paginas detectadas del proyecto (Fase 1). El preview se deriva de aqui. */
   views?: ProjectView[];
   interaction?: {
@@ -50,6 +57,10 @@ export interface Blueprint {
     naming?: string;
     folders?: string;
     tree?: TreeNode[];
+    /** Estructura REAL detectada al escanear el proyecto (solo lectura / semilla).
+     *  El puente (seedEditor) la usa para sembrar `tree` de forma honesta: refleja
+     *  las carpetas y archivos reales, no una plantilla ni solo las rutas. */
+    detectedTree?: TreeNode[];
   };
   security?: {
     authMethods?: string[];
@@ -85,7 +96,25 @@ export interface Blueprint {
   notes?: string;
   preset?: string;
   templateId?: string; // golden path aplicado (para trazabilidad de origen)
+  /** Procedencia por campo (trazabilidad VISIBLE en el editor). Clave =
+   *  `${domain}.${key}` en convención de resolve (structure.tree, data.formPreset,
+   *  interaction.navigationPattern…). `detected` = inferido del análisis; `seeded` =
+   *  autoaplicado por el puente; `manual` = editado por el usuario. resolve.ts sigue
+   *  siendo la verdad de default/heredado; esto refina el caso "custom". */
+  slots?: Record<string, Record<string, string>>;
+  sceneLayouts?: Record<string, SceneBlockInstance[]>;
+  provenance?: Record<string, FieldProvenance>;
+  /** Coleccion CMS de proyectos del portfolio. Renderizados dinamicamente por
+   *  ProjectCollectionSection y ProjectDetailTemplate — nunca como HTML estatico. */
+  projects?: PortfolioProject[];
+  /** Rutas personalizadas del proyecto (paginas, colecciones, detalle, sistema). */
+  customRoutes?: Array<{ path: string; sceneId: string; title: string; icon?: string; isDynamic?: boolean; parentPath?: string; description?: string }>;
 }
+export type ProvenanceOrigin = "detected" | "seeded" | "manual";
+export interface FieldProvenance { origin: ProvenanceOrigin; source?: string; confidence?: "strong" | "weak" | "default"; value?: unknown }
+/** Estado de procedencia resuelto para pintar en la UI (combina resolve + provenance). */
+export type OriginState = "detected" | "seeded" | "manual" | "default" | "inherited" | "missing";
+export interface OriginInfo { state: OriginState; source?: string; confidence?: string }
 
 /* ------------------------------ Opciones UI -------------------------------- */
 export interface Badge { text: string; tone: "good" | "warn" | "bad" | "info" }
@@ -93,7 +122,7 @@ export interface Opt { value: string; label: string; desc: string; badge?: Badge
 
 export interface TreeNode { name: string; type: "folder" | "file" | "package"; children?: TreeNode[] }
 export interface LibItem { name: string; category?: string; status: "approved" | "discouraged" | "blocked" }
-export const LIB_CATEGORIES = ["forms", "state", "ui", "data-fetching", "validation", "utils", "other"];
+export const LIB_CATEGORIES = ["framework", "ui", "motion", "routing", "styling", "build", "data", "data-fetching", "state", "forms", "validation", "testing", "desktop", "native", "runtime", "utils", "other"];
 
 export const TREE_TEMPLATES: Record<string, TreeNode[]> = {
   "feature-based": [

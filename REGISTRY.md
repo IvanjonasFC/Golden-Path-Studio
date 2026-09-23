@@ -1,45 +1,46 @@
-# Registry shadcn privado
+# shadcn registry endpoint
 
-El Vault expone cada componente en el formato **registry-item de shadcn**, así que
-puedes instalarlo en cualquier proyecto (no solo React) con el CLI de shadcn.
+Golden Path Studio serves every component in the shadcn **registry-item** format, so
+you can install any of them into any project with the shadcn CLI (not only React ones).
 
-## Rutas
+## Routes
 
-- `GET /r/<slug>.json` — un componente. El `<slug>` es el id del Vault con los `:`
-  cambiados por `__` (p.ej. `uiverse:Buttons:autor_x-1` → `uiverse__Buttons__autor_x-1`).
-- `GET /r/c/<slug>.json` — una colección/perfil entera (todos sus ficheros en un item).
+- `GET /r/<slug>.json` — a single component. The `<slug>` is the catalog id with `:`
+  replaced by `__` (e.g. `uiverse:Buttons:author-1` → `uiverse__Buttons__author-1`).
+- `GET /r/c/<slug>.json` — a whole collection / profile (all its files in one item).
 
-En la web, el detalle de cada componente y de cada colección ya trae el botón
-**“Copiar”** con el comando listo (usa el origin actual: `localhost` en dev, tu dominio en prod).
+In the web UI, each component and collection detail already has a **Copy** button with
+the command ready (it uses the current origin: `localhost` in dev, your domain in prod).
 
-## Usar en otro proyecto
+## Using it in another project
 
-En el proyecto destino, una vez (si no lo está):
+Once per target project (if not already initialized):
 
 ```bash
 npx shadcn@latest init
 ```
 
-Luego, con el Vault **arrancado** (`npm run dev` → http://localhost:3000) o desplegado:
+Then, with Golden Path Studio **running** (`npm run dev` → http://localhost:3000) or
+deployed:
 
 ```bash
-# un componente
+# one component
 npx shadcn@latest add http://localhost:3000/r/magicui__Text__shiny-text.json
 
-# un perfil entero (tu marca / stack)
-npx shadcn@latest add http://localhost:3000/r/c/mi-marca.json
+# a whole profile (your brand / stack)
+npx shadcn@latest add http://localhost:3000/r/c/my-brand.json
 ```
 
-El código cae en tu proyecto con sus dependencias. No hace falta desplegar nada:
-sirve con la web local encendida.
+The code lands in your project with its dependencies. Nothing needs to be deployed —
+it works with the local web app running.
 
-## Notas y límites
+## Notes and limits
 
-- **Brilla con componentes React** (Magic UI, Aceternity, shadcn, Cult, Kokonut):
-  `type` = `registry:component`, se colocan según tu `components.json`.
-- Los **CSS/HTML de Uiverse** se sirven como `registry:file` con un `target`
-  (`components/vault/uiverse/<fichero>.html`). Funciona, pero para esos el copiar-pegar
-  del código sigue siendo lo más cómodo.
-- El item incluye el `content` inline (es lo que espera el CLI al leer una URL), más
-  un bloque `meta` con fuente, licencia y atribución (shadcn lo ignora).
-- Respeta licencias: todo el catálogo precargado es MIT.
+- **Best with React components** (Magic UI, Aceternity, shadcn, Cult, Kokonut):
+  `type` = `registry:component`, placed according to your `components.json`.
+- **Uiverse CSS/HTML** is served as `registry:file` with a target
+  (`components/vault/uiverse/<file>.html`). It works, but copy-paste is often simpler
+  for those.
+- Each item embeds its `content` inline (what the CLI expects when reading a URL) plus a
+  `meta` block with source, license and attribution (shadcn ignores it).
+- Respect licenses: the prebuilt catalog is MIT.

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#0a0c14"/>
+        <text x="40" y="50" fill="#6366f1" font-size="11" font-weight="800" letter-spacing="2">DESIGN TOKENS</text>
+        <text x="40" y="80" fill="#ffffff" font-size="22" font-weight="900">Warm Minimal Button System</text>
+
+        <!-- Button Row 1 -->
+        <rect x="40" y="120" width="150" height="44" rx="8" fill="#3b82f6"/>
+        <text x="115" y="147" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Primary Solid</text>
+
+        <rect x="220" y="120" width="150" height="44" rx="8" fill="transparent" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="295" y="147" text-anchor="middle" fill="#60a5fa" font-size="12" font-weight="700">Secondary Outline</text>
+
+        <rect x="400" y="120" width="150" height="44" rx="8" fill="rgba(255,255,255,0.06)"/>
+        <text x="475" y="147" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">Soft Ghost</text>
+
+        <rect x="580" y="120" width="150" height="44" rx="22" fill="linear-gradient(90deg, #6366f1 0%, #a855f7 100%)"/>
+        <text x="655" y="147" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="800">Gradient Pill</text>
+
+        <!-- Button Row 2: Statuses -->
+        <rect x="40" y="200" width="150" height="44" rx="8" fill="#10b981"/>
+        <text x="115" y="227" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Success Confirm</text>
+
+        <rect x="220" y="200" width="150" height="44" rx="8" fill="#ef4444"/>
+        <text x="295" y="227" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Destructive</text>
+
+        <rect x="400" y="200" width="150" height="44" rx="8" fill="#f59e0b"/>
+        <text x="475" y="227" text-anchor="middle" fill="#000000" font-size="12" font-weight="800">Warning Alert</text>
+
+        <rect x="580" y="200" width="150" height="44" rx="8" fill="#1e293b" opacity="0.6"/>
+        <text x="655" y="227" text-anchor="middle" fill="#64748b" font-size="12">Disabled State</text>
+
+        <!-- Neumorphic Row -->
+        <rect x="40" y="290" width="700" height="150" rx="12" fill="#0f1422" stroke="rgba(255,255,255,0.06)"/>
+        <text x="65" y="325" fill="#ffffff" font-size="14" font-weight="800">Interactive Micro-Interactions &amp; Loading States</text>
+        <text x="65" y="348" fill="rgba(255,255,255,0.5)" font-size="11">Standard token compliance for buttons across all screen densities</text>
+
+        <rect x="65" y="370" width="140" height="42" rx="8" fill="#3b82f6"/>
+        <circle cx="85" cy="391" r="6" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="10"/>
+        <text x="135" y="396" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Processing...</text>
+
+        <rect x="225" y="370" width="140" height="42" rx="8" fill="#1e293b"/>
+        <text x="295" y="396" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">Copy Code &rarr;</text>
+      </svg>

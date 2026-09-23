@@ -25,6 +25,7 @@ import type {
   ConfidenceAdjustment,
 } from "../src/lib/analysis";
 import { emptyRuntime } from "../src/lib/analysis";
+import type { Tracer } from "../src/lib/trace";
 
 /* ---- tipos de entrada ---------------------------------------------------- */
 export interface RuntimeOptions {
@@ -36,6 +37,7 @@ export interface RuntimeOptions {
   navTimeoutMs?: number;        // timeout de navegación por ruta (defecto 15000)
   executablePath?: string;      // ruta a un Chromium concreto (opcional; si no, el de Playwright)
   staticHints?: { navigation?: string; architecture?: string; productType?: string };
+  tracer?: Tracer;              // trazabilidad estructurada opcional
 }
 
 const DESKTOP = { name: "desktop" as const, width: 1280, height: 800 };
@@ -232,14 +234,23 @@ function deriveAdjustments(sig: LayoutSignal[], hints: RuntimeOptions["staticHin
       out.push({ field: "navigation", effect: "confirm", staticValue: hints?.navigation ?? null, runtimeValue: "topbar", reason: "Topbar visible sin sidebar." });
   }
 
-  // Tipo de producto: tabla/formulario vs. hero.
-  if (on("table") || on("form")) {
-    if (/dashboard|crud|app|auth/.test(ptype))
-      out.push({ field: "productType", effect: "confirm", staticValue: hints?.productType ?? null, runtimeValue: on("table") ? "data/tabla" : "form", reason: "Tabla/formulario reales en el render." });
+  // Tipo de producto. Distinción clave: una TABLA de datos real es señal fuerte de
+  // app de datos; un FORMULARIO suelto (contacto, login) es normal en casi cualquier
+  // sitio y NO contradice un portfolio/landing. Un form de contacto sobre un portfolio
+  // no es evidencia de "otro tipo" → no se marca contradicción (honestidad, sin ruido).
+  const contentish = /portfolio|landing|marketing|content|blog|docs|static|escritorio|desktop|mobile/.test(ptype);
+  if (on("table")) {
+    if (/dashboard|crud|app|auth|commerce|data/.test(ptype))
+      out.push({ field: "productType", effect: "confirm", staticValue: hints?.productType ?? null, runtimeValue: "data/tabla", reason: "Tabla de datos real en el render." });
     else if (ptype)
-      out.push({ field: "productType", effect: "contradict", staticValue: hints?.productType ?? null, runtimeValue: on("table") ? "data/tabla" : "form", reason: "Runtime ve tabla/formulario; la estática sugería otro tipo." });
+      out.push({ field: "productType", effect: "contradict", staticValue: hints?.productType ?? null, runtimeValue: "data/tabla", reason: "Runtime ve una tabla de datos real; la estática no la esperaba." });
+  } else if (on("form")) {
+    // Solo confirma cuando el tipo estático ya implica formularios protagonistas.
+    if (/dashboard|crud|app|auth/.test(ptype))
+      out.push({ field: "productType", effect: "confirm", staticValue: hints?.productType ?? null, runtimeValue: "form", reason: "Formulario real en el render, coherente con el tipo." });
+    // En portfolio/landing/etc. un formulario (contacto) es esperado: sin ajuste.
   } else if (on("hero") && !on("table") && !on("form")) {
-    if (/static|portfolio|landing|marketing/.test(ptype))
+    if (contentish)
       out.push({ field: "productType", effect: "confirm", staticValue: hints?.productType ?? null, runtimeValue: "landing/estático", reason: "Hero presente y sin tabla/formulario." });
   }
 
@@ -255,9 +266,12 @@ export async function runRuntime(opts: RuntimeOptions): Promise<RuntimeReport> {
     baseURLSource: opts.baseURLSource ?? (opts.baseURL ? "manual" : "none"),
     startedAt,
   });
+  const tr = opts.tracer;
+  tr?.emit("runtime_started", { baseURL: opts.baseURL, source: rep.baseURLSource, routes: (opts.routes ?? []).length });
 
   if (!opts.baseURL) {
-    rep.errors.push("Sin baseURL: no hay servidor en marcha que analizar. Arranca el dev server o pásame la URL.");
+    const m = "Sin baseURL: no hay servidor en marcha que analizar. Arranca el dev server o pásame la URL.";
+    rep.errors.push(m); tr?.error("runtime_failed", m);
     rep.finishedAt = Date.now();
     return rep;
   }
@@ -268,7 +282,8 @@ export async function runRuntime(opts: RuntimeOptions): Promise<RuntimeReport> {
   try {
     pw = (await import("playwright")) as PW;
   } catch {
-    rep.errors.push("Playwright no está instalado. Instálalo con `npm i -D playwright` y `npx playwright install chromium`. Runtime omitido (la capa estática sigue siendo válida).");
+    const m = "Playwright no está instalado. Instálalo con `npm i -D playwright` y `npx playwright install chromium`. Runtime omitido (la capa estática sigue siendo válida).";
+    rep.errors.push(m); tr?.error("runtime_failed", m);
     rep.finishedAt = Date.now();
     return rep;
   }
@@ -280,7 +295,8 @@ export async function runRuntime(opts: RuntimeOptions): Promise<RuntimeReport> {
     if (exe) launchOpts.executablePath = exe;
     browser = await pw.chromium.launch(launchOpts);
   } catch (e) {
-    rep.errors.push(`No se pudo arrancar Chromium: ${String((e as Error).message || e)}. Prueba \`npx playwright install chromium\`.`);
+    const m = `No se pudo arrancar Chromium: ${String((e as Error).message || e)}. Prueba \`npx playwright install chromium\`.`;
+    rep.errors.push(m); tr?.error("runtime_failed", m);
     rep.finishedAt = Date.now();
     return rep;
   }
@@ -302,6 +318,13 @@ export async function runRuntime(opts: RuntimeOptions): Promise<RuntimeReport> {
         viewport: { width: vp.width, height: vp.height },
         deviceScaleFactor: 1,
         isMobile: vp.name === "mobile",
+      });
+      // tsx/esbuild compilan con --keep-names y envuelven funciones con __name();
+      // esa helper NO existe en el contexto de la página, así que page.evaluate(domProbe)
+      // lanzaría "__name is not defined". La definimos como identidad antes de cada carga.
+      await context.addInitScript(() => {
+        const g = globalThis as unknown as { __name?: (f: unknown) => unknown };
+        if (typeof g.__name !== "function") g.__name = (f) => f;
       });
     } catch (e) {
       rep.warnings.push(`No se pudo crear el contexto ${vp.name}: ${String((e as Error).message || e)}.`);
@@ -336,7 +359,9 @@ export async function runRuntime(opts: RuntimeOptions): Promise<RuntimeReport> {
 
       // señales del DOM real
       try {
-        const probe = (await page.evaluate(domProbe)) as ProbeResult;
+        // Probe como STRING: evita los helpers que esbuild/tsx inyecta al serializar
+        // una funcion para page.evaluate (p. ej. __name -> ReferenceError en el navegador).
+        const probe = (await page.evaluate("(" + domProbe.toString() + ")()")) as unknown as ProbeResult;
         perRouteSignals.push(toSignals(probe.counts as Record<LayoutSignalKey, number>));
         if (theme === "unknown" && probe.theme !== "unknown") { theme = probe.theme; bg = probe.bg; }
       } catch (e) {
@@ -357,6 +382,7 @@ export async function runRuntime(opts: RuntimeOptions): Promise<RuntimeReport> {
           };
           rep.screenshots.push(shot);
           shotsTaken++;
+          tr?.emit("runtime_screenshot_taken", { route, viewport: vp.name, file: shot.file, bytes: shot.bytes });
         } catch (e) {
           rep.warnings.push(`${vp.name} ${route}: captura fallida (${String((e as Error).message || e).slice(0, 80)}).`);
         }
@@ -377,7 +403,20 @@ export async function runRuntime(opts: RuntimeOptions): Promise<RuntimeReport> {
   rep.ran = rep.routesCrawled.length > 0;
   rep.layoutSignals = mergeSignals(rep.viewportFindings.map((v) => v.signals));
   if (rep.ran) rep.confidenceAdjustments = deriveAdjustments(rep.layoutSignals, opts.staticHints);
-  else if (!rep.errors.length) rep.errors.push("No se pudo renderizar ninguna ruta: revisa la baseURL y que el servidor esté activo.");
+  else if (!rep.errors.length) {
+    const m = "No se pudo renderizar ninguna ruta: revisa la baseURL y que el servidor esté activo.";
+    rep.errors.push(m); tr?.error("runtime_failed", m);
+  }
+
+  // Trazabilidad: avisos por ruta + contradicciones + cierre.
+  if (tr) {
+    for (const w of rep.warnings) tr.warn("import_warning", w);
+    for (const a of rep.confidenceAdjustments) {
+      if (a.effect === "contradict") tr.warn("contradiction_found", `${a.field}: runtime=${a.runtimeValue} vs estático=${a.staticValue ?? "—"}`, { field: a.field, runtimeValue: a.runtimeValue, staticValue: a.staticValue });
+      else tr.emit("contradiction_found", { field: a.field, effect: a.effect, runtimeValue: a.runtimeValue });
+    }
+    tr.emit("runtime_completed", { ran: rep.ran, routesCrawled: rep.routesCrawled.length, screenshots: rep.screenshots.length });
+  }
 
   rep.finishedAt = Date.now();
   return rep;

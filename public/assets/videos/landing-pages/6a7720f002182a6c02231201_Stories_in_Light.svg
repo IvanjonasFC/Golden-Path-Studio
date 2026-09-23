@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <defs>
+          <radialGradient id="portraitSpotlight" cx="45%" cy="50%" r="45%">
+            <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.38"/>
+            <stop offset="60%" stop-color="#b45309" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#0c0a09" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="#0c0a09"/>
+        <circle cx="360" cy="240" r="230" fill="url(#portraitSpotlight)"/>
+
+        <!-- Header Editorial -->
+        <text x="50" y="40" fill="#e7e5e4" font-size="13" font-weight="600" letter-spacing="1">FARUQ VISUAL ARCHIVE</text>
+        <text x="750" y="40" text-anchor="end" fill="rgba(231,229,228,0.6)" font-size="11">LOW LIGHT / SHUTTER</text>
+
+        <!-- Headline -->
+        <text x="50" y="160" fill="#ffffff" font-size="52" font-weight="600" letter-spacing="-1">stories in light</text>
+        <text x="50" y="200" fill="#f59e0b" font-size="18" font-weight="500">motion / time / exposure</text>
+
+        <!-- Frame & Viewfinder -->
+        <rect x="520" y="100" width="230" height="300" rx="4" fill="#141110" stroke="rgba(245,158,11,0.3)"/>
+        <circle cx="635" cy="240" r="45" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="635" y="244" text-anchor="middle" fill="#ffffff" font-size="10" font-family="monospace">F/1.4 · ISO 100</text>
+
+        <!-- Bottom Editorial Copy -->
+        <text x="50" y="380" fill="rgba(255,255,255,0.5)" font-size="11" font-weight="700">NIGHT WORK ONLY</text>
+        <text x="50" y="405" fill="rgba(255,255,255,0.8)" font-size="13">slow shutters, moving light. where motion becomes the subject</text>
+        <text x="50" y="425" fill="rgba(255,255,255,0.8)" font-size="13">and light does the drawing. no studio, no staging.</text>
+      </svg>

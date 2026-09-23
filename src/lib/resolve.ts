@@ -230,7 +230,7 @@ export function resolveBlueprint(bp: Blueprint, visualTokens?: Record<string, st
   // ser required/recommended (pasan a "advanced" = opcional) y no bloquean ni
   // cuentan como falta. Nada se inventa: es el mismo motor con clase efectiva.
   const projectType = String((bp as { projectType?: string }).projectType ?? "").toLowerCase();
-  const isStatic = /static|portfolio|marketing|landing/.test(projectType);
+  const isStatic = /static|portfolio|marketing|landing|content|blog|docs/.test(projectType);
   const NA_STATIC = new Set<string>([
     "security.authMethods", "security.sessionType", "security.validationLib", "security.serverSideValidation",
     "security.inlineValidation", "security.csp", "security.rateLimit", "security.secretsServerOnly",
@@ -238,6 +238,26 @@ export function resolveBlueprint(bp: Blueprint, visualTokens?: Record<string, st
   ]);
   const clsOf = (domain: DomainKey, spec: FieldSpec): FieldClass =>
     (isStatic && NA_STATIC.has(`${domain}.${spec.key}`)) ? "advanced" : spec.cls;
+
+  // P3 — DEFAULTS CONSCIENTES DE PLATAFORMA. Un default solo se aplica si tiene
+  // sentido para ESTE tipo de proyecto; si no, se resuelve al valor correcto de la
+  // plataforma (p. ej. RSC solo en Next). Sigue siendo origin="default" (honesto:
+  // no "detectado"), pero deja de meter semántica web/Next donde no aplica.
+  const libNames = new Set((bp.libraries?.items ?? []).map((l) => String(l.name).toLowerCase()));
+  const isNext = libNames.has("next");
+  const platformDefault = (domain: DomainKey, key: string, base: unknown): unknown => {
+    // RSC (React Server Components) solo tiene sentido en Next. Astro, Tauri/Electron
+    // (desktop), Capacitor/Android (mobile) y backend puro → false por defecto.
+    if (domain === "structure" && key === "serverComponentsDefault") return isNext;
+    // Navegación por defecto según la naturaleza del proyecto.
+    if (domain === "interaction" && key === "navigationPattern") {
+      if (projectType === "mobile") return "tabbed";
+      if (projectType === "desktop" || projectType === "dashboard" || projectType === "crud" || projectType === "commerce") return "app-shell";
+      if (/portfolio|marketing|landing|content|blog|docs|static/.test(projectType)) return "landing";
+      return base;
+    }
+    return base;
+  };
 
   for (const domain of DOMAINS) {
     const fields: FieldReport[] = [];
@@ -253,7 +273,7 @@ export function resolveBlueprint(bp: Blueprint, visualTokens?: Record<string, st
       if (present(dv)) { origin = present(tv) && sameVal(dv, tv) ? "template" : "custom"; value = dv; }
       else if (present(tv)) { origin = "template"; value = tv; }
       else if (present(pv)) { origin = "preset"; value = pv; }
-      else if (spec.def !== undefined) { origin = "default"; value = spec.def; }
+      else if (spec.def !== undefined) { origin = "default"; value = platformDefault(domain, spec.key, spec.def); }
       else { origin = "missing"; value = undefined; }
 
       resolved[domain][spec.key] = value;

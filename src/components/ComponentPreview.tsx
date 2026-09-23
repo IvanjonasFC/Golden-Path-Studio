@@ -154,12 +154,26 @@ export default function ComponentPreview({
             width={width}
           />
         ) : thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumbnail}
-            alt={name}
-            className="h-full min-h-[420px] max-h-[600px] w-full rounded-lg object-contain"
-          />
+          /\.(mp4|mov)(\?.*)?$/i.test(thumbnail) ? (
+            <div className="flex h-full min-h-[420px] w-full items-center justify-center rounded-lg bg-black p-2">
+              <video
+                src={thumbnail}
+                controls
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="max-h-[600px] w-full rounded-lg object-contain"
+              />
+            </div>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={thumbnail}
+              alt={name}
+              className="h-full min-h-[420px] max-h-[600px] w-full rounded-lg object-contain"
+            />
+          )
         ) : (
           <div className="grid h-full min-h-[420px] w-full place-items-center rounded-lg border border-dashed border-white/10 text-sm text-[var(--color-muted)]">
             Sin vista previa · mira el código abajo

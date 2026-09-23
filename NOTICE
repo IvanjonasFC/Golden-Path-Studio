@@ -1,0 +1,41 @@
+Golden Path Studio
+Copyright (c) 2026 Ivan Jonas (IvanjonasFC)
+
+This product is distributed under the MIT License (see LICENSE).
+
+--------------------------------------------------------------------------------
+Third-party component sources
+--------------------------------------------------------------------------------
+
+Golden Path Studio ingests UI components from external sources into a local
+catalog. It does not redistribute those components in this repository — the
+catalog database is generated on the user's machine by `npm run ingest` and is
+not committed here. Each ingested component stores its own `license`, `author`
+and `sourceUrl`, and that attribution is preserved through the web UI, the MCP
+tools and the shadcn registry export.
+
+The supported sources and their licenses:
+
+  - Uiverse.io          MIT
+  - HyperUI             MIT
+  - ThreeUI             MIT
+  - Magic UI            MIT
+  - Aceternity UI       MIT for free components; "Pro" items require a license
+                        and are skipped automatically during ingest
+  - shadcn/ui           MIT
+  - Cult UI             MIT
+  - Kokonut UI          MIT
+
+Users are responsible for honoring each source's license and attribution
+requirements when shipping projects that include ingested components.
+
+--------------------------------------------------------------------------------
+Bundled runtime dependencies
+--------------------------------------------------------------------------------
+
+Fonts are vendored offline via @fontsource:
+  - Inter               SIL Open Font License 1.1
+  - Space Grotesk       SIL Open Font License 1.1
+
+All other runtime dependencies are declared in package.json and retain their
+respective licenses.

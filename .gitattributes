@@ -1,0 +1,24 @@
+# Normalize line endings to LF on checkin; check out native on Windows.
+* text=auto eol=lf
+
+# Windows helper scripts keep CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Treat these as binary (no diff / no EOL normalization).
+*.db binary
+*.db-wal binary
+*.db-shm binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# Keep generated/vendored paths out of language stats and diffs.
+data/** linguist-generated=true
+public/vendor/** linguist-vendored=true
+package-lock.json linguist-generated=true

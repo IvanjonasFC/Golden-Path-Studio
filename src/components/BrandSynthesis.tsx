@@ -6,7 +6,7 @@
    draft crudo. Componentes autocontenidos, listos para montar en la pestaña
    Visual (panel maestro) o en la columna de impacto de cualquier pestaña.
    ============================================================================ */
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, useEffect } from "react";
 import {
   type Origin, type DomainKey, type DomainReport, type TabStatus,
   type ResolvedConfig, type ValidationReport,
@@ -463,26 +463,58 @@ type AuditView = "coverage" | "publish" | "versions";
 /*  la publicación viven en una capa secundaria, no pegados al preview.       */
 /* ========================================================================== */
 
-/** Pill compacto para la barra superior. Abre el AuditDrawer. */
-export function StatusPill({ report, onOpen }: { report: ValidationReport; onOpen: () => void }) {
+/** Pill compacto unificado para la barra superior (Cobertura + Versiones). Abre el AuditDrawer. */
+export function StatusPill({
+  report,
+  onOpen,
+  onOpenVersions,
+  versionCount = 0,
+}: {
+  report: ValidationReport;
+  onOpen: () => void;
+  onOpenVersions?: () => void;
+  versionCount?: number;
+}) {
   const ok = report.canPublish;
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      title="Estado, cobertura y publicación de la marca"
-      className="group flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-panel-2)] px-3 py-2 text-xs transition-colors hover:bg-white/10"
-    >
-      <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[var(--color-text)]">
-        <span className={"h-2 w-2 rounded-full " + (ok ? "bg-emerald-400" : "bg-red-400")} />
-        Estado
-      </span>
-      <span className="text-[var(--color-muted)]">Cobertura <b className="text-[var(--color-text)]">{Math.round(report.coverage * 100)}%</b></span>
-      <span className={"rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase " + (ok ? "text-emerald-300 border-emerald-400/40 bg-emerald-400/10" : "text-red-300 border-red-400/40 bg-red-400/10")}>
-        {ok ? "publicable" : `${report.blockingIssues.length} bloqueo(s)`}
-      </span>
-      <span className="text-[var(--color-muted)] group-hover:text-white">›</span>
-    </button>
+    <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-panel-2)] p-0.5 shadow-sm">
+      {/* Botón principal: Estado, Cobertura y Publicación */}
+      <button
+        type="button"
+        onClick={onOpen}
+        title="Cobertura de arquitectura y checklist de publicación"
+        className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors hover:bg-white/10"
+      >
+        <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[var(--color-text)]">
+          <span className={"h-2 w-2 rounded-full " + (ok ? "bg-emerald-400" : "bg-red-400")} />
+          Cobertura
+        </span>
+        <span className="font-mono font-bold text-[var(--color-text)]">
+          {Math.round(report.coverage * 100)}%
+        </span>
+        <span className={"rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase " + (ok ? "text-emerald-300 border-emerald-400/40 bg-emerald-400/10" : "text-red-300 border-red-400/40 bg-red-400/10")}>
+          {ok ? "publicable" : `${report.blockingIssues.length} bloqueo(s)`}
+        </span>
+      </button>
+
+      {/* Segmento integrado: Historial de Versiones y Snapshots */}
+      <button
+        type="button"
+        onClick={onOpenVersions ?? onOpen}
+        title="Historial de versiones, snapshots inmutables y diffs"
+        className="flex items-center gap-1.5 border-l border-white/10 px-2.5 py-1.5 text-xs text-[var(--color-muted)] hover:text-white hover:bg-white/10 rounded-r-md transition-colors"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-sky-400 shrink-0">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span className="font-semibold text-[11px]">Versiones</span>
+        <span className="rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 px-1.5 text-[9px] font-mono font-bold">
+          {versionCount}
+        </span>
+        <span className="text-white/40 text-[11px]">›</span>
+      </button>
+    </div>
   );
 }
 
@@ -524,9 +556,12 @@ export function SlotsDefinitionPanel({ summary }: { summary: SceneDefinition[] }
 
 /** Slide-over lateral con toda la auditoría y publicación. */
 export function AuditDrawer({
-  report, brandId, open, onClose, slotsSummary, getDraft, onRestored,
-}: { report: ValidationReport; brandId: string; open: boolean; onClose: () => void; slotsSummary?: SceneDefinition[]; getDraft?: () => { name: string; tokens: unknown; previewIds: string[] }; onRestored?: (brand: RestoredBrand) => void }) {
-  const [view, setView] = useState<AuditView>("coverage");
+  report, brandId, open, onClose, slotsSummary, getDraft, onRestored, initialView = "coverage", onPublished,
+}: { report: ValidationReport; brandId: string; open: boolean; onClose: () => void; slotsSummary?: SceneDefinition[]; getDraft?: () => { name: string; tokens: unknown; previewIds: string[] }; onRestored?: (brand: RestoredBrand) => void; initialView?: AuditView; onPublished?: () => void }) {
+  const [view, setView] = useState<AuditView>(initialView);
+  useEffect(() => {
+    if (open) setView(initialView);
+  }, [open, initialView]);
   const TABS: { id: AuditView; label: string }[] = [
     { id: "coverage", label: "Cobertura" }, { id: "publish", label: "Publicar" }, { id: "versions", label: "Versiones" },
   ];
@@ -580,7 +615,7 @@ export function AuditDrawer({
               <PublishChecklist report={report} />
             </>
           )}
-          {view === "versions" && <BrandVersions brandId={brandId} getDraft={getDraft} onRestored={onRestored} />}
+          {view === "versions" && <BrandVersions brandId={brandId} getDraft={getDraft} onRestored={onRestored} onPublished={onPublished} />}
         </div>
       </aside>
     </div>

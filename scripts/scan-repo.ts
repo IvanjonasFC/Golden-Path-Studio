@@ -15,9 +15,11 @@
    ============================================================================ */
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { buildAnalysis, attachRuntime, emptyRuntime } from "../src/lib/analysis";
+import { buildAnalysis, attachRuntime, attachTrace, emptyRuntime } from "../src/lib/analysis";
 import { collectFiles, deriveRoutes } from "./walkRepo";
 import { runRuntime, detectBaseURL } from "./runtime";
+import { writeImportLog } from "./importLog";
+import { Tracer } from "../src/lib/trace";
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
@@ -36,28 +38,34 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const tracer = new Tracer({ echo: true, prefix: "scan-repo" });
+  tracer.emit("scan_started", { root, tool: "scan-repo", runtime: wantRuntime });
+
   const files = await collectFiles(root);
   if (!files.length) {
+    tracer.error("import_failed", `No se encontraron archivos de texto analizables en ${root}`);
     console.error(`✗ No se encontraron archivos de texto analizables en ${root}`);
     process.exit(1);
   }
 
-  let report = buildAnalysis(files, { root, tool: "scan-repo" });
+  const routes = deriveRoutes(files);
+  tracer.emit("routes_detected", { count: routes.length, routes });
+
+  let report = buildAnalysis(files, { root, tool: "scan-repo", tracer });
 
   if (wantRuntime) {
     let baseURL = baseFlag;
     let source: "manual" | "autodetect" | "none" = baseURL ? "manual" : "none";
     if (!baseURL) { console.log("· runtime: autodetectando dev server local…"); baseURL = await detectBaseURL(); if (baseURL) source = "autodetect"; }
     if (!baseURL) {
-      report = attachRuntime(report, emptyRuntime({
-        enabled: true, baseURLSource: "none",
-        errors: ["Runtime pedido pero no hay dev server local ni --base. Arranca el proyecto o pasa --base=http://localhost:3000."],
-      }));
+      const m = "Runtime pedido pero no hay dev server local ni --base. Arranca el proyecto o pasa --base=http://localhost:3000.";
+      tracer.error("runtime_failed", m);
+      report = attachRuntime(report, emptyRuntime({ enabled: true, baseURLSource: "none", errors: [m] }));
       console.log("  runtime: sin baseURL (omitido, honesto)");
     } else {
       const s = report.summary;
       const runtime = await runRuntime({
-        root, baseURL, baseURLSource: source, routes: deriveRoutes(files),
+        root, baseURL, baseURLSource: source, routes, tracer,
         staticHints: { navigation: s.navigation?.value, architecture: s.architecture?.value, productType: s.productType?.value },
       });
       report = attachRuntime(report, runtime);
@@ -67,8 +75,12 @@ async function main(): Promise<void> {
     }
   }
 
+  report = attachTrace(report, tracer.report());
+
   const out = outArg ? path.resolve(outArg) : path.join(root, "analysis.json");
   await fs.writeFile(out, JSON.stringify(report, null, 2), "utf8");
+  const logPath = await writeImportLog(root, report);
+  if (logPath) console.log(`  log de importación → ${logPath}`);
 
   const s = report.summary;
   const line = (label: string, inf?: { value: string; confidence: string; source: string }) =>

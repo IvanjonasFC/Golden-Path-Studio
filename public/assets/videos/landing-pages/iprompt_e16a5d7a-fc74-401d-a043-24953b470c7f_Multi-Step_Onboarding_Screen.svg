@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480" font-family="system-ui, -apple-system, sans-serif">
+        <rect width="100%" height="100%" fill="#0a0c14"/>
+        
+        <!-- Stepper Indicator Header -->
+        <rect x="0" y="0" width="800" height="70" fill="#101524"/>
+        <line x1="0" y1="70" x2="800" y2="70" stroke="rgba(255,255,255,0.08)"/>
+
+        <!-- Step 1 Done -->
+        <circle cx="250" cy="35" r="14" fill="#10b981"/>
+        <path d="M 244 35 L 248 39 L 256 31" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+        <text x="274" y="39" fill="#ffffff" font-size="12" font-weight="700">Account</text>
+
+        <line x1="330" y1="35" x2="380" y2="35" stroke="#10b981" stroke-width="2"/>
+
+        <!-- Step 2 Active -->
+        <circle cx="410" cy="35" r="14" fill="#3b82f6"/>
+        <text x="410" y="40" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="800">2</text>
+        <text x="434" y="39" fill="#3b82f6" font-size="12" font-weight="800">Workspace</text>
+
+        <line x1="510" y1="35" x2="560" y2="35" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+
+        <!-- Step 3 Pending -->
+        <circle cx="590" cy="35" r="14" fill="#1e293b"/>
+        <text x="590" y="40" text-anchor="middle" fill="#64748b" font-size="11" font-weight="800">3</text>
+        <text x="614" y="39" fill="#64748b" font-size="12">Team Members</text>
+
+        <!-- Center Container -->
+        <text x="400" y="125" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800">Choose Your Workspace Focus</text>
+        <text x="400" y="150" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="13">Tailor the component generator to your engineering stack</text>
+
+        <!-- Option 1: Selected -->
+        <rect x="80" y="180" width="195" height="190" rx="10" fill="#151b2e" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="250" cy="205" r="9" fill="#3b82f6"/>
+        <path d="M 246 205 L 249 208 L 254 203" fill="none" stroke="#ffffff" stroke-width="2"/>
+        <rect x="100" y="200" width="36" height="36" rx="8" fill="rgba(59,130,246,0.15)"/>
+        <rect x="110" y="210" width="16" height="16" rx="3" fill="#3b82f6"/>
+        <text x="100" y="265" fill="#ffffff" font-size="14" font-weight="700">Frontend Engine</text>
+        <text x="100" y="288" fill="rgba(255,255,255,0.6)" font-size="11">Next.js 15, React 19,</text>
+        <text x="100" y="304" fill="rgba(255,255,255,0.6)" font-size="11">Tailwind 4 &amp; Shadcn</text>
+        <rect x="100" y="328" width="70" height="20" rx="4" fill="rgba(59,130,246,0.2)"/>
+        <text x="135" y="342" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="700">SELECTED</text>
+
+        <!-- Option 2 -->
+        <rect x="302" y="180" width="195" height="190" rx="10" fill="#111625" stroke="rgba(255,255,255,0.08)"/>
+        <circle cx="472" cy="205" r="9" fill="none" stroke="rgba(255,255,255,0.2)"/>
+        <rect x="322" y="200" width="36" height="36" rx="8" fill="rgba(255,255,255,0.06)"/>
+        <rect x="332" y="210" width="16" height="16" rx="3" fill="#818cf8"/>
+        <text x="322" y="265" fill="#ffffff" font-size="14" font-weight="700">Design Systems</text>
+        <text x="322" y="288" fill="rgba(255,255,255,0.6)" font-size="11">Figma Tokens, CSS</text>
+        <text x="322" y="304" fill="rgba(255,255,255,0.6)" font-size="11">Variables &amp; Theme Hub</text>
+
+        <!-- Option 3 -->
+        <rect x="525" y="180" width="195" height="190" rx="10" fill="#111625" stroke="rgba(255,255,255,0.08)"/>
+        <circle cx="695" cy="205" r="9" fill="none" stroke="rgba(255,255,255,0.2)"/>
+        <rect x="545" y="200" width="36" height="36" rx="8" fill="rgba(255,255,255,0.06)"/>
+        <rect x="555" y="210" width="16" height="16" rx="3" fill="#10b981"/>
+        <text x="545" y="265" fill="#ffffff" font-size="14" font-weight="700">Full-Stack SaaS</text>
+        <text x="545" y="288" fill="rgba(255,255,255,0.6)" font-size="11">Database, Auth, API</text>
+        <text x="545" y="304" fill="rgba(255,255,255,0.6)" font-size="11">Routing &amp; Telemetry</text>
+
+        <!-- Bottom Controls -->
+        <line x1="80" y1="400" x2="720" y2="400" stroke="rgba(255,255,255,0.08)"/>
+        <text x="80" y="435" fill="rgba(255,255,255,0.5)" font-size="13" font-weight="600">&larr; Back to Profile</text>
+        <rect x="570" y="415" width="150" height="38" rx="8" fill="#3b82f6"/>
+        <text x="645" y="439" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">Continue &rarr;</text>
+      </svg>

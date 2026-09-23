@@ -42,46 +42,28 @@ Building modern web applications with AI coding assistants suffers from three cr
 
 ## Visual Showcase
 
-### 1. Component Vault & Full-Text Search Gallery
-
-Browse, inspect, and copy real component source code archived locally across top design ecosystems (shadcn/ui, Magic UI, Aceternity, HyperUI, Uiverse). Features instant SQLite FTS5 search, category facets, framework filtering, and one-click code copy.
-
 <div align="center">
-  <img src="assets/component-gallery.png" alt="Component Vault & Gallery" width="920" />
+
+### 1. Component Vault & FTS5 Search
+*Offline-first SQLite catalog archiving 4,900+ real component implementations with instant full-text search.*
+
+<img src="assets/component-gallery.png" alt="Component Vault" width="760" />
+
+<br/><br/>
+
+### 2. Prompt Studio & Layout Showcase
+*Curated UI prompt formulas, interactive mockups, and layout presets ready for AI generation.*
+
+<img src="assets/prompt-studio.png" alt="Prompt Studio" width="760" />
+
+<br/><br/>
+
+### 3. Functional Brand Studio & Headless CMS
+*Visual brand blueprint workbench with live click-introspection and dynamic project case studies.*
+
+<img src="assets/brand-editor.png" alt="Brand Studio & CMS Canvas" width="760" />
+
 </div>
-
-* **Local Resilience**: Every component's code is stored in your SQLite database. If a remote website goes down, your components remain available.
-* **Faceted Navigation**: Filter by category (Heroes, Navbars, Bento Grids, Forms, Footers), framework (React, HTML/Tailwind), or source registry.
-* **Direct Code Introspection**: View TypeScript props, Tailwind styles, and dependencies before installing or importing.
-
----
-
-### 2. Prompt Studio & High-Converting Design Showcase
-
-Explore a curated laboratory of modern UI prompts, layout formulas, interactive mockups, and video-backed hero sections designed to eliminate the "generic AI look" when prompting LLMs.
-
-<div align="center">
-  <img src="assets/prompt-studio.png" alt="Prompt Studio & Design Showcase" width="920" />
-</div>
-
-* **Production-Ready Layouts**: Complete prompt specifications for Bento grids, split authentication cards, telemetry dashboards, and multi-step onboarding.
-* **Curated Visual Assets**: Includes gradient palettes, CSS mesh formulas, and motion presets ready to feed into Claude, Cursor, or Antigravity.
-* **Live Interactive Previews**: Test layout dynamics, glassmorphism filters, and responsive viewports directly in the browser.
-
----
-
-### 3. Functional Brand Editor & Headless CMS
-
-The core design engine where design tokens, architectural rules, and dynamic project pages unite into a single reactive canvas.
-
-<div align="center">
-  <img src="assets/brand-editor.png" alt="Functional Brand Editor & CMS" width="920" />
-</div>
-
-* **Click Introspection & Auto-Discovery**: Click any element on the live canvas (heading, cover photo, badge, button) to immediately focus and edit its properties in the right inspector panel.
-* **Dynamic Project Routing**: Automatically resolves and renders full technical case studies for all your CMS projects (`/proyectos/[slug]`) through a unified template engine.
-* **Asset Manager & 2D Focal Point**: Global viewport modal with interactive focal point canvas, aspect ratio solver, and WCAG ALT check so images are never awkwardly cropped.
-* **Live WCAG Contrast Auditor**: Real-time evaluation of color tokens against WCAG 2.1 AA/AAA contrast standards with one-click automated fixes.
 
 ---
 

@@ -1,8 +1,8 @@
-﻿<div align="center">
+<div align="center">
 
 # Golden Path Studio
 
-**A local-first visual workbench and headless CMS for your UI. Catalog the real code of components from multiple sources into a local database, define a brand blueprint once, and hand both to your AI over MCP so it builds with your identity â€” offline, resilient, and deterministic.**
+**A local-first visual workbench and headless CMS for your UI. Catalog the real code of components from multiple sources into a local database, define a brand blueprint once, and hand both to your AI over MCP so it builds with your identity — offline, resilient, and deterministic.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)](https://nextjs.org)
@@ -40,7 +40,52 @@ Building modern web applications with AI coding assistants suffers from three cr
 
 ---
 
-## Features
+## Visual Showcase
+
+### 1. Component Vault & Full-Text Search Gallery
+
+Browse, inspect, and copy real component source code archived locally across top design ecosystems (shadcn/ui, Magic UI, Aceternity, HyperUI, Uiverse). Features instant SQLite FTS5 search, category facets, framework filtering, and one-click code copy.
+
+<div align="center">
+  <img src="assets/component-gallery.png" alt="Component Vault & Gallery" width="920" />
+</div>
+
+* **Local Resilience**: Every component's code is stored in your SQLite database. If a remote website goes down, your components remain available.
+* **Faceted Navigation**: Filter by category (Heroes, Navbars, Bento Grids, Forms, Footers), framework (React, HTML/Tailwind), or source registry.
+* **Direct Code Introspection**: View TypeScript props, Tailwind styles, and dependencies before installing or importing.
+
+---
+
+### 2. Prompt Studio & High-Converting Design Showcase
+
+Explore a curated laboratory of modern UI prompts, layout formulas, interactive mockups, and video-backed hero sections designed to eliminate the "generic AI look" when prompting LLMs.
+
+<div align="center">
+  <img src="assets/prompt-studio.png" alt="Prompt Studio & Design Showcase" width="920" />
+</div>
+
+* **Production-Ready Layouts**: Complete prompt specifications for Bento grids, split authentication cards, telemetry dashboards, and multi-step onboarding.
+* **Curated Visual Assets**: Includes gradient palettes, CSS mesh formulas, and motion presets ready to feed into Claude, Cursor, or Antigravity.
+* **Live Interactive Previews**: Test layout dynamics, glassmorphism filters, and responsive viewports directly in the browser.
+
+---
+
+### 3. Functional Brand Editor & Headless CMS
+
+The core design engine where design tokens, architectural rules, and dynamic project pages unite into a single reactive canvas.
+
+<div align="center">
+  <img src="assets/brand-editor.png" alt="Functional Brand Editor & CMS" width="920" />
+</div>
+
+* **Click Introspection & Auto-Discovery**: Click any element on the live canvas (heading, cover photo, badge, button) to immediately focus and edit its properties in the right inspector panel.
+* **Dynamic Project Routing**: Automatically resolves and renders full technical case studies for all your CMS projects (`/proyectos/[slug]`) through a unified template engine.
+* **Asset Manager & 2D Focal Point**: Global viewport modal with interactive focal point canvas, aspect ratio solver, and WCAG ALT check so images are never awkwardly cropped.
+* **Live WCAG Contrast Auditor**: Real-time evaluation of color tokens against WCAG 2.1 AA/AAA contrast standards with one-click automated fixes.
+
+---
+
+## Features Matrix
 
 | Area | Route | What it does |
 |------|-------|--------------|
@@ -90,7 +135,7 @@ graph TD
 
     subgraph AI ["AI Integration (Model Context Protocol)"]
         DB & BRAND & CMS --> MCP["MCP Server (mcp/server.ts)"]
-        MCP --> CLIENTS["Claude Desktop Â· Cursor Â· Antigravity IDE"]
+        MCP --> CLIENTS["Claude Desktop · Cursor · Antigravity IDE"]
     end
 ```
 
@@ -123,13 +168,35 @@ graph TD
 
 </details>
 
+<details>
+<summary>Repository Architecture & Directory Layout</summary>
+
+| Directory / File | Responsibility |
+|------------------|----------------|
+| `assets/` | Showcase media, banner assets (`portada.png`), and visual preview captures |
+| `data/` | Local SQLite catalog database (`catalog.db`), mockups map, and design prompts |
+| `mcp/` | Official Stdio Model Context Protocol (MCP) server implementation (`server.ts`) |
+| `public/` | Public assets, thumbnails, and vendored offline dependencies (Three.js, Babel) |
+| `scripts/` | Automated test suites, CMS migration pipelines, and repository ingesters |
+| `src/app/` | Next.js 15 App Router pages, dynamic routes (`/proyectos/[slug]`), and REST APIs |
+| `src/components/` | Visual Brand Editor, Asset Manager modal, WCAG Auditor, and Catalog Client |
+| `src/db/` | SQLite database client, Drizzle ORM schema, and FTS5 search index |
+| `src/ingest/` | Pluggable source adapters for remote and local component registries |
+| `src/lib/` | Core design token compiler, verification runtime, and scene composition solvers |
+| `.env.example` | Sanitized environment template (no credentials, offline SQLite default) |
+| `CHANGELOG.md` | Release history and version documentation |
+| `CONTRIBUTING.md` | Guidelines for contributing components and adapters |
+| `LICENSE` | MIT License |
+
+</details>
+
 ---
 
 ## Getting Started
 
 ### Prerequisites
 
-* **Node.js 20+** (v22 recommended) â€” verify with `node -v`
+* **Node.js 20+** (v22 recommended) — verify with `node -v`
 * **npm** or **pnpm**
 * **git** on your `PATH`
 
@@ -226,57 +293,6 @@ npm run test:verification
 
 ---
 
-## Project Structure
-
-```text
-Golden-Path-Studio/
-â”œâ”€â”€ assets/                               # Banner and showcase media (portada.png)
-â”œâ”€â”€ data/                                 # Catalogs, mockups, and prompts data
-â”œâ”€â”€ mcp/
-â”‚   â””â”€â”€ server.ts                         # Stdio MCP Server (8 tools)
-â”œâ”€â”€ public/
-â”‚   â”œâ”€â”€ assets/                           # Asset library & media
-â”‚   â”œâ”€â”€ thumbnails/                       # Component preview thumbnails
-â”‚   â””â”€â”€ vendor/                           # Vendored offline libraries (Three.js, Babel, Framer)
-â”œâ”€â”€ scripts/
-â”‚   â”œâ”€â”€ seed-portfolio-brand.ts           # Canonical portfolio brand seeder (10 CMS projects)
-â”‚   â”œâ”€â”€ sync-portfolio-db.ts              # SQLite database sync & normalization script
-â”‚   â”œâ”€â”€ test-cms-pipeline.ts              # 8-point CMS pipeline & route verification suite
-â”‚   â”œâ”€â”€ test-verification-runtime.ts      # Cardinality, AST hashing, & conflict resolution tests
-â”‚   â””â”€â”€ scan-repo.ts                      # Repository scanner and ingester
-â”œâ”€â”€ src/
-â”‚   â”œâ”€â”€ app/                              # Next.js 15 App Router
-â”‚   â”‚   â”œâ”€â”€ api/                          # REST API (brands, collections, components, exports)
-â”‚   â”‚   â”œâ”€â”€ colecciones/                  # Collections and stack profile views
-â”‚   â”‚   â”œâ”€â”€ marcas/                       # Brand Studio and visual canvas editor
-â”‚   â”‚   â”œâ”€â”€ perfil/                       # User profile and settings
-â”‚   â”‚   â”œâ”€â”€ prompts/                      # Prompt Studio & showcase
-â”‚   â”‚   â””â”€â”€ r/                            # Dynamic shadcn/ui registry endpoints
-â”‚   â”œâ”€â”€ components/
-â”‚   â”‚   â”œâ”€â”€ AssetPickerModal.tsx          # Centered viewport React Portal for asset management
-â”‚   â”‚   â”œâ”€â”€ BlockInspector.tsx            # Universal inspector with capability auto-discovery
-â”‚   â”‚   â”œâ”€â”€ BrandEditor.tsx               # Visual canvas editor with click introspection
-â”‚   â”‚   â”œâ”€â”€ CatalogClient.tsx             # FTS5 search catalog explorer
-â”‚   â”‚   â””â”€â”€ WcagLiveAuditor.tsx           # Live WCAG AAA contrast analyzer
-â”‚   â”œâ”€â”€ db/
-â”‚   â”‚   â””â”€â”€ index.ts                      # SQLite client & Drizzle ORM schema
-â”‚   â”œâ”€â”€ ingest/                           # Pluggable ingesters (shadcn, Uiverse, MagicUI)
-â”‚   â””â”€â”€ lib/
-â”‚       â”œâ”€â”€ componentContract.ts          # Core component interfaces & prop normalizers
-â”‚       â”œâ”€â”€ portfolioProjects.ts          # CMS entity schemas & ProjectDetailTemplate
-â”‚       â”œâ”€â”€ projectCollectionResolver.ts  # Dynamic route resolver & publication policy
-â”‚       â”œâ”€â”€ projectDocument.ts            # Verification runtime & SHA-256 document hashing
-â”‚       â””â”€â”€ tokens.ts                     # Design token compiler & color matrix solver
-â”œâ”€â”€ .env.example
-â”œâ”€â”€ CHANGELOG.md
-â”œâ”€â”€ CONTRIBUTING.md
-â”œâ”€â”€ LICENSE                               # MIT License
-â””â”€â”€ package.json
-```
-
----
-
 ## License
 
 Distributed under the [MIT](LICENSE) license. All bundled component code preserves original author attributions as documented in [NOTICE](NOTICE).
-

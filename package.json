@@ -9,7 +9,6 @@
     "scan": "tsx scripts/scan-serve.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:cms": "tsx scripts/test-cms-pipeline.ts",
     "test:verification": "tsx scripts/test-verification-runtime.ts",
